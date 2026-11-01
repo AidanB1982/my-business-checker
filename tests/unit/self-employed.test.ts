@@ -6,7 +6,7 @@ for(const year of ['2025/26','2026/27'] as const) {
  const rules=selfEmployedRules[year];
  describe(`self-employed ${year} — draft rules`,()=>{
   it('matches the £72,000 income and £14,000 expense fixture',()=>{
-   expect(calculateSelfEmployed(input,rules)).toMatchObject({profitPence:5800000,businessIncomeTaxPence:1063200,class4Pence:241660,businessTaxPence:1304860,takeHomePence:4495140,monthlyTakeHomePence:374595,monthlySetAsidePence:108739,taxYear:year,ruleSetVersion:'draft-1',sourceReview:'pending'});
+   expect(calculateSelfEmployed(input,rules)).toMatchObject({profitPence:5800000,businessIncomeTaxPence:1063200,class4Pence:241660,businessTaxPence:1304860,takeHomePence:4495140,monthlyTakeHomePence:374595,monthlySetAsidePence:108739,taxYear:year,ruleSetVersion:'draft-2',sourceReview:'pending'});
   });
   it.each([[0,0,0],[12570,0,0],[50270,754000,226200],[100000,2743200,325660],[125140,4251600,375940],[150000,5370300,425660]])('checks profit £%s at band boundaries',(income,taxPence,niPence)=>{
    const result=calculateSelfEmployed({...input,income,expenses:0},rules);
@@ -47,8 +47,8 @@ describe('input limits and rule isolation',()=>{
  it.each([-1,NaN,Infinity,10000001,100.001])('rejects invalid amount %s',income=>{
   expect(()=>calculateSelfEmployed({...input,income},selfEmployedRules['2026/27'])).toThrow();
  });
- it('rejects an unsupported Scottish calculation',()=>{
-  expect(()=>calculateSelfEmployed({...input,region:'scotland' as 'england'},selfEmployedRules['2026/27'])).toThrow();
+ it('rejects an unknown tax region',()=>{
+  expect(()=>calculateSelfEmployed({...input,region:'unknown' as 'england'},selfEmployedRules['2026/27'])).toThrow();
  });
  it.each(['wales','northern-ireland'] as const)('supports %s',region=>{
   expect(calculateSelfEmployed({...input,region},selfEmployedRules['2026/27']).businessIncomeTaxPence).toBe(1063200);

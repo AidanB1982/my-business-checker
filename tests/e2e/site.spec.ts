@@ -49,8 +49,22 @@ test('self-employed tax shows a breakdown and invalidates stale results',async({
  await page.getByRole('button',{name:'Calculate my take-home'}).click();
  await expect(page.getByText(/Tax year 2025\/26 · Rule set/)).toBeVisible();
  await page.getByLabel('Where do you pay Income Tax?').selectOption('scotland');
- await expect(page.getByRole('button',{name:'Calculate my take-home'})).toBeDisabled();
  await expect(page.getByRole('heading',{name:'£44,951.40'})).not.toBeVisible();
+ await expect(page.getByRole('button',{name:'Calculate my take-home'})).toBeEnabled();
+ await page.getByRole('button',{name:'Calculate my take-home'}).click();
+ await expect(page.getByRole('heading',{name:'£43,209.60'})).toBeVisible();
+ await page.getByText('Why is it that number?').click();
+ await expect(page.getByText(/Total Scottish Income Tax/)).toBeVisible();
+ await expect(page.getByText(/Starter rate:/)).toBeVisible();
+ await page.getByLabel('Tax year',{exact:true}).selectOption('2026/27');
+ await expect(page.getByRole('heading',{name:'£43,209.60'})).not.toBeVisible();
+ await expect(page.getByRole('button',{name:'Calculate my take-home'})).toBeEnabled();
+ await page.getByRole('button',{name:'Calculate my take-home'}).click();
+ await expect(page.getByRole('heading',{name:'£43,241.35'})).toBeVisible();
+ await page.getByLabel('Where do you pay Income Tax?').selectOption('england');
+ await expect(page.getByRole('heading',{name:'£43,241.35'})).not.toBeVisible();
+ await page.getByRole('button',{name:'Calculate my take-home'}).click();
+ await expect(page.getByRole('heading',{name:'£44,951.40'})).toBeVisible();
 });
 test('tax preview stays local and fits mobile',async({page})=>{
  await page.setViewportSize({width:375,height:812});
