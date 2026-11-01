@@ -34,6 +34,10 @@ npx playwright test
 - `supabase/migrations/`: account, subscription, saved-calculation and immutable rule-set schema with row-level security.
 - `tests/`: calculation boundaries, tax/NI fixtures, entitlement checks, PostgreSQL RLS and browser journeys.
 
+## Installable app
+
+The app includes a web manifest, phone icons, standalone mode, installation guidance and a static offline screen. It must be hosted over HTTPS for phone installation. Offline support does not store financial inputs, account pages or tax rules. An already open calculator can continue calculating locally. See [deployment instructions](docs/DEPLOYMENT.md).
+
 ## Implemented versus planned
 
 The responsive app structure, five tool routes, five introductory guides, pricing, email-link auth code, account shell and Supabase schema are implemented. The mileage preview uses a **draft 2025/26** rules snapshot; it is not release-reviewed. The self-employed tax preview calculates business profit, incremental Income Tax, Class 4 NI, take-home and a monthly set-aside for England, Wales and Northern Ireland using draft 2025/26 and 2026/27 snapshots. Its current official-source review is pending; Scotland and the exclusions shown in the interface are not supported. The other three calculators show development notices until their engines are ready. Guides/legal copy also require publication review. No tracking scripts or financial-input persistence are enabled.

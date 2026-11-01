@@ -59,3 +59,26 @@ test('tax preview stays local and fits mobile',async({page})=>{
  expect(outbound).toEqual([]);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
+
+test('installable manifest, icons and offline navigation are available',async({page,context})=>{
+ const manifestResponse=await page.request.get('/manifest.webmanifest');
+ expect(manifestResponse.ok()).toBe(true);
+ const manifest=await manifestResponse.json();
+ expect(manifest).toMatchObject({name:'My Business Checker',display:'standalone',start_url:'/tools',scope:'/'});
+ for(const icon of manifest.icons){const response=await page.request.get(icon.src);expect(response.ok()).toBe(true);expect(response.headers()['content-type']).toContain('image/png');}
+ await page.goto('/');
+ await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href','/manifest.webmanifest');
+ await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
+ await page.reload();
+ await page.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));
+ await page.goto('/sign-in');
+ const cached=await page.evaluate(async()=>{const cache=await caches.open('mbc-offline-v1');return (await cache.keys()).map(request=>new URL(request.url).pathname);});
+ expect(cached).toEqual(['/offline.html']);
+ await context.setOffline(true);
+ await page.goto('/tools');
+ await expect(page.getByRole('heading',{name:'You’re offline.'})).toBeVisible();
+ await expect(page.getByText('Your financial figures are not stored for offline use.',{exact:false})).toBeVisible();
+ await context.setOffline(false);
+ await page.getByRole('button',{name:'Try again'}).click();
+ await expect(page.getByRole('heading',{name:'Your business toolbox.'})).toBeVisible();
+});
