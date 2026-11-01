@@ -52,8 +52,8 @@ export function createStorefrontTokenResolver(fetcher:Fetcher=(url,options)=>fet
    if(!body?.data)throw new ShopifyAccessError(stage,'INVALID_RESPONSE');return body.data;
   }
   async function existing(){
-   const data=await graphql('TOKEN_LOOKUP',`query ExistingStorefrontTokens { storefrontAccessTokens(first:100) { edges { node { ${FIELDS} } } } }`);
-   const edges=data.storefrontAccessTokens?.edges;if(!Array.isArray(edges))throw new ShopifyAccessError('TOKEN_LOOKUP','INVALID_RESPONSE');
+   const data=await graphql('TOKEN_LOOKUP',`query ExistingStorefrontTokens { shop { storefrontAccessTokens(first:100) { edges { node { ${FIELDS} } } } } }`);
+   const edges=data.shop?.storefrontAccessTokens?.edges;if(!Array.isArray(edges))throw new ShopifyAccessError('TOKEN_LOOKUP','INVALID_RESPONSE');
    return (edges as {node:TokenRecord}[]).find(edge=>edge?.node?.title===TITLE&&usable(edge.node))?.node.accessToken;
   }
   const token=await existing();if(token)return token;
