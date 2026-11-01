@@ -1,9 +1,11 @@
 import 'server-only';
 export const SHOPIFY_STORE='blackwoodpublishing.myshopify.com';
+// Original store domain confirmed by the owner in Shopify Settings > Domains.
+const SHOPIFY_WEBHOOK_SHOP='vmbd0z-c6.myshopify.com';
 export const SHOPIFY_ACCOUNT_URL=`https://${SHOPIFY_STORE}/account`;
 const value=(name:string)=>process.env[name]?.trim()||undefined;
 export function shopifyConfig(){return {
- store:SHOPIFY_STORE,webhookShop:value('SHOPIFY_WEBHOOK_SHOP_DOMAIN')?.toLowerCase()??SHOPIFY_STORE,token:value('SHOPIFY_STOREFRONT_ACCESS_TOKEN'),
+ store:SHOPIFY_STORE,webhookShop:value('SHOPIFY_WEBHOOK_SHOP_DOMAIN')?.toLowerCase()??SHOPIFY_WEBHOOK_SHOP,token:value('SHOPIFY_STOREFRONT_ACCESS_TOKEN'),
  clientId:value('SHOPIFY_CLIENT_ID'),clientSecret:value('SHOPIFY_CLIENT_SECRET'),
  secret:value('SHOPIFY_WEBHOOK_SECRET'),
  variant:value('SHOPIFY_MEMBERSHIP_VARIANT_ID')??'60314386301273',
