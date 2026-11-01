@@ -59,3 +59,23 @@ Open `/api/health` on the deployed app. `billing.configurationIssues` lists miss
 Authenticated checkout errors now contain a fixed `SF_` stage code for app authentication, token lookup or token creation. HTTP status and allowlisted schema/permission categories are reported without raw provider messages, request headers, credential values or tokens. A configuration-presence check is distinct from successful app authentication.
 
 The Advanced pricing card starts the same authenticated checkout directly. If sign-in is needed, an HTTP-only, same-site cookie records an allowlisted `/pricing` return destination. The Supabase email callback URL remains unchanged, and successful sign-in returns to pricing without requiring an account-page visit. Existing subscribers/customer mappings still receive the management link rather than a duplicate subscription.
+
+## Checkout account-link storage failures
+
+Checkout stores a private, hashed link before creating a Shopify cart. A storage failure stops checkout; it must not fall back to email matching or skip account linking. The browser receives only fixed categories, never raw database messages:
+
+- `DB_LINK_SCHEMA`: missing billing table/column or stale PostgREST schema cache. Confirm migration `202611010002_shopify_membership.sql` ran in the project used by Production. Do not blindly rerun it; it is transactional and not idempotent. If the schema exists, reload the API schema cache using `NOTIFY pgrst, 'reload schema';` in Supabase SQL Editor.
+- `DB_LINK_AUTH`: rejected server credential. Verify Production `SUPABASE_SERVICE_ROLE_KEY` is the service-role/server secret key for the same project as `NEXT_PUBLIC_SUPABASE_URL`, then redeploy. Never share the key or put it in a public variable.
+- `DB_LINK_PERMISSION`: wrong key role or missing grants. Verify the server key first. The migration grants billing table access only to `service_role`; do not grant access to `anon` or `authenticated` or disable RLS.
+- `DB_LINK_USER`: the signed-in user is absent from the database used by the server. Check project alignment and sign in again after fixing it.
+- `DB_LINK_NETWORK`: no HTTP response from the database. Check availability and retry.
+- `DB_LINK_WRITE`: another insert failure. Use Supabase database/API logs to investigate without exposing row data or credentials.
+
+A read-only SQL Editor check for the migration's checkout table and grant:
+
+```sql
+select to_regclass('public.shopify_checkout_links') as checkout_table,
+       case when to_regclass('public.shopify_checkout_links') is not null
+         then has_table_privilege('service_role', 'public.shopify_checkout_links', 'INSERT')
+         else false end as service_role_can_insert;
+```
