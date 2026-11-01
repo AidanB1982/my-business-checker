@@ -20,3 +20,7 @@ The user has authorized a GitHub update. A GitHub push publishes source code, no
 - Run real email sign-in and account isolation checks against production Supabase.
 - Retain current preview notices for unfinished tools, billing and Advanced features.
 - Do not expose .env.local or secret credentials in GitHub. No accounts, payments or releases are fabricated.
+
+## Mileage correction — 1 November 2026
+
+The user initially supplied Xero text and then supplied an HMRC extract from https://www.gov.uk/government/publications/rates-and-allowances-travel-mileage-and-fuel-allowances/travel-mileage-and-fuel-rates-and-allowances, headed “Travel — mileage and fuel rates and allowances”, updated 21 May 2026. The extract lists 2026/27 cars/vans at 55p for the first 10,000 miles and 25p thereafter, and rates from 2011 to 2026 at 45p/25p. Both snapshots were checked against that supplied primary-source extract on 1 November 2026. No independent live-page retrieval is claimed. The HMRC URL is now the source for both snapshots; the full article is not copied into the repository. 12,000 miles gives £6,000 for 2026/27 and £5,000 for 2025/26. Tests check both years and clear stale results when the year changes. The scope remains a sole-trader expense preview; this does not implement employee reimbursement, mileage allowance relief, company-car rates or passenger payments.

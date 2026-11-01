@@ -6,7 +6,13 @@ test('finds a tool and calculates a mileage expense locally',async({page})=>{
  await page.getByRole('link',{name:/Business mileage/}).click();
  await page.getByLabel('Qualifying business miles').fill('12000');
  await page.getByRole('button',{name:/Estimate mileage/}).click();
+ await expect(page.getByRole('heading',{name:'£6,000.00'})).toBeVisible();
+ await expect(page.getByText('Miles at 55p',{exact:true})).toBeVisible();
+ await page.getByLabel('Tax year',{exact:true}).selectOption('2025/26');
+ await expect(page.getByRole('heading',{name:'£6,000.00'})).not.toBeVisible();
+ await page.getByRole('button',{name:/Estimate mileage/}).click();
  await expect(page.getByRole('heading',{name:'£5,000.00'})).toBeVisible();
+ await expect(page.getByText('Miles at 45p',{exact:true})).toBeVisible();
  await expect(page.getByText(/not your tax saving/)).toBeVisible();
  await page.getByLabel('Qualifying business miles').fill('500');
  await expect(page.getByRole('heading',{name:'£5,000.00'})).not.toBeVisible();
