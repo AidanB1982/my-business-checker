@@ -29,6 +29,7 @@ export function EmploymentCalculator({kind}:{kind:'salary-take-home-calculator'|
    setSnapshot(built);setDraft(current);
   }catch(err){setError(err instanceof Error&&!err.message.startsWith('[')?err.message:'Check the figures, percentages and ages. Retirement age must be later than current age.');}
  }}>
+ <h2>{salaryTool?'Your salary details':'Your pension details'}</h2>
  <label htmlFor="employmentYear">{salaryTool?'Tax year':'Contribution rules reference year'}</label><select id="employmentYear" name="employmentYear" defaultValue="2026/27"><option>2026/27</option><option>2025/26</option></select>
  <Field name="salary" label={salaryTool?'Annual salary before pension deductions (£)':'Current annual salary (£)'} value={salaryTool?72000:40000}/>
  {salaryTool&&<><label htmlFor="region">Income Tax region</label><select id="region" name="region"><option value="england">England</option><option value="wales">Wales</option><option value="northern-ireland">Northern Ireland</option><option value="scotland">Scotland</option></select><label htmlFor="pensionMethod">Pension deduction method</label><select id="pensionMethod" value={method} onChange={event=>{setMethod(event.target.value);reset();}}><option value="net-pay">Net pay: pension before Income Tax</option><option value="relief-at-source">Relief at source: pension after tax</option><option value="salary-sacrifice">Salary sacrifice</option><option value="none">No employee pension deduction (set employee % to 0)</option></select></>}

@@ -223,3 +223,21 @@ test('checkout stays open until confirmed payment then closes and returns to acc
  paid=true;await confirmation;await expect.poll(()=>checkout.isClosed(),{timeout:10000}).toBe(true);
  await expect(page).not.toHaveURL(/\/pricing$/);
 });
+
+test('tool catalogue filters categories and combines them with search',async({page})=>{
+ await page.goto('/tools');
+ await page.getByRole('button',{name:'Planning',exact:true}).click();
+ await expect(page.locator('.tool-card')).toHaveCount(2);
+ await expect(page.getByRole('button',{name:'Planning',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('searchbox').fill('pension');await expect(page.locator('.tool-card')).toHaveCount(1);
+ await page.getByRole('button',{name:'Expenses',exact:true}).click();await expect(page.getByRole('heading',{name:'No tools found'})).toBeVisible();
+ await page.getByRole('button',{name:'Show all tools'}).click();await expect(page.locator('.tool-card')).toHaveCount(7);
+});
+test('redesigned pages keep navigation and content within a narrow mobile viewport',async({page})=>{
+ await page.setViewportSize({width:375,height:812});
+ for(const path of ['/tools','/pricing','/sign-in','/tools/salary-take-home-calculator','/tools/pension-pot-predictor']){
+  await page.goto(path);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),path).toBe(true);
+  await expect(page.getByRole('link',{name:'My workspace',exact:true})).toBeVisible();
+ }
+ await page.goto('/tools');await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Tools',exact:true})).toHaveAttribute('aria-current','page');
+});

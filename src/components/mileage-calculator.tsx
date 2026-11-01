@@ -16,6 +16,7 @@ export function MileageCalculator() {
         try {if(value===null || String(value).trim()==="")throw new Error("Enter your business miles.");setResult(calculateMileage(Number(value),rules));}
         catch(err){setError(err instanceof Error?err.message:"Check your miles.");}
       }}>
+        <h2>Your journey details</h2>
         <p className="eyebrow">Cars and vans · {year}</p>
         <label htmlFor="mileage-tax-year">Tax year</label>
         <select id="mileage-tax-year" value={year} onChange={event=>{setYear(event.target.value as MileageTaxYear);setResult(null);setError("");}}><option>2026/27</option><option>2025/26</option></select>

@@ -40,3 +40,11 @@ Advanced saving, reopening, same-tool comparisons and HTML/CSV export are implem
 ## Salary checker and pension projection
 
 Two additional free tools are implemented: `/tools/salary-take-home-calculator` and `/tools/pension-pot-predictor`, with guides, discovery links and Advanced snapshot/report support. The salary estimate uses twelve equal monthly NI/loan calculations and annual tax planning for both years and all four regions. Net pay, relief at source and salary sacrifice are separate methods. The projection is a defined-contribution scenario with flat salary by default, month-end contributions and editable growth/fee/inflation assumptions, not an annuity or State Pension forecast. No new Supabase migration or credentials are required for these tools. See `docs/SALARY-PENSION.md` for limitations and formulas.
+
+## Workspace and visual redesign
+
+The site now shares a new green/white design system, SVG icons, active navigation and a direct workspace entry. The homepage includes an explicitly illustrative salary example calculated with the existing salary engine, not a customer result; decorative bars are labelled illustrative. The calculator catalogue adds category filters combined with text search and a resettable empty state.
+
+The authenticated workspace now shows the real saved-calculation count, current plan and paid-access end date, with calculator shortcuts, saved-work selection, membership management and existing payment recovery. Record counts display Unavailable on errors rather than a fabricated zero. Saved report/CSV access and deletion remain available for existing records after membership expires; new comparisons retain the existing Advanced check. Pricing, sign-in, guides, inputs and result panels share the new responsive presentation. Mobile inputs use 16px text, focus indicators and reduced-motion support remain, and no new database migration, financial rule or billing API changes are introduced.
+
+Validation includes all calculator/API/database tests, browser checks for category/search combinations, mobile overflow, sign-in routing and mocked confirmed-payment return. Desktop and mobile account layouts were visually inspected with a local fixture rather than a production session. No live payment was made during design verification.
