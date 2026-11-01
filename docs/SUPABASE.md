@@ -16,8 +16,9 @@ In Authentication → URL Configuration, Site URL is the origin **without** `/au
 
 1. `202611010001_initial_schema.sql`: original profiles, subscriptions, saved calculations, rule sets and RLS. The owner confirmed applying this earlier. Do not rerun it on that project.
 2. **New:** `202611010002_shopify_membership.sql`: private checkout links/customer mapping/paid-order ledger, reversal tombstones, size limits and service-role-only atomic billing functions. Apply once after the original migration. This file has only been run in local PostgreSQL tests; generating it does not apply it to production.
+3. `202611010003_project_workspaces.sql`: shared project workspaces, memberships, projects, tasks, milestones, discussions, activity and email-bound invitations. Apply once after the existing migrations. It uses normal authenticated RLS and needs no new server key or Edge Function. See [Projects setup](PROJECTS.md).
 
-Both migrations are transactional. Inspect for naming conflicts before using them on a different existing project. Billing functions use a per-order transaction lock to serialize concurrent payments/refunds, and a user lock for the paid-period update. Function execution is denied to anonymous and authenticated clients.
+All migrations are transactional. Inspect for naming conflicts before using them on a different existing project. Billing functions use a per-order transaction lock to serialize concurrent payments/refunds, and a user lock for the paid-period update. Billing function execution is denied to anonymous and authenticated clients. Project functions are separately restricted to signed-in users and validate workspace roles and owner entitlement.
 
 ## Data permissions
 

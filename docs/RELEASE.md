@@ -1,5 +1,9 @@
 # App release status
 
+## Shared project management
+
+The native `/projects` section includes shared workspaces, project portfolios, task boards/lists, milestones, deliverables, checklists, dependencies, discussions, due-date calendars, timelines, workload/capacity planning and exports. Owners need Advanced; invited editors/viewers join under the owner plan. Invitations are manually shared links. Apply `202611010003_project_workspaces.sql` once before use; no Edge Function or billing changes are required. See [features, roles and deployment checks](PROJECTS.md). Database/API tests cover isolation and permissions; browser tests exercise the real client UI through a test-only fixture and verify sign-in continuation on production routes.
+
 The repository contains a Next.js app. It is not yet a native iOS/Android package. It has not been submitted to either app store. The installable web app now includes a manifest, PNG icons (including Apple and maskable sizes), standalone launch metadata, installation guidance and a service worker with an offline screen. It still needs a hosted HTTPS origin for phone installation. Only the static offline screen is cached; authenticated pages, API responses, financial data and rule sets are not cached. New worker versions activate after existing app windows are closed; normal online navigation always fetches current content.
 
 ## Self-employed calculator

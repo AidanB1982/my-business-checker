@@ -16,6 +16,8 @@ The repository has not been deployed merely by pushing GitHub. Future pushes to 
 
 ## Install on a phone
 
+For the shared Projects section, also run `supabase/migrations/202611010003_project_workspaces.sql` once in the existing Supabase project. A Vercel redeploy does not run database migrations. No additional environment variables or Edge Functions are needed; see [Projects setup](PROJECTS.md).
+
 - iPhone/iPad: open the HTTPS app address in Safari → Share → Add to Home Screen.
 - Android: open in Chrome → Install app / Add to Home screen when offered. An Install app button also appears in our footer when the browser exposes an install prompt.
 

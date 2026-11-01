@@ -15,6 +15,8 @@ npm run dev
 
 The calculators run locally without an account. Email sign-in uses the configured Supabase project. See [Supabase setup](docs/SUPABASE.md), [deployment](docs/DEPLOYMENT.md) and [Shopify billing](docs/SHOPIFY.md).
 
+Shared **Projects & tasks** are available at `/projects`: workspaces, boards, milestones, deliverables, discussions, weekly workload and team permissions. Owners need Advanced; invited teammates participate under that workspace plan. Apply the new project SQL migration once before use; see [project setup and features](docs/PROJECTS.md).
+
 ```sh
 npm run lint
 npm run typecheck
