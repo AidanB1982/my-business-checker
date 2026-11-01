@@ -85,3 +85,22 @@ select to_regclass('public.shopify_checkout_links') as checkout_table,
 Subscribe opens Shopify in a separate browser window/tab and keeps the app open. The app polls its authenticated, uncached `/api/billing/status` endpoint every three seconds for up to twenty minutes. Only an active paid period written by the signed webhook confirms payment. Once confirmed, the app closes the window it opened and navigates to `/account`. The checkout window retains its opener relationship so the app can close it; the server restricts checkout destinations to trusted Shopify/configured checkout hosts. If popups are blocked, the app shows an explicit checkout link. Browser window rules can prevent automatic closing in some environments; the account link remains available. A confirmation timeout does not indicate payment failure and must not encourage a second subscription. No storefront script, checkout-return query parameter or browser callback grants access.
 
 This flow must be verified with a real payment/webhook delivery; browser tests simulate confirmation and do not exercise Shopify payment processing.
+
+## Paid order still shows Free
+
+Fulfilment is separate from payment: membership activates on `orders/paid`, not on fulfilment. Do not place another paid order or manually grant access just to test the integration. Check the real order is Paid, the checkout link exists, and the Order payment webhook targets `/api/billing/shopify/webhook` on Production.
+
+Webhook requests now emit a fixed `shopify_membership_webhook` diagnostic in Vercel runtime logs and return a `WH_` code on failure. No bodies, signing headers, account-link tokens, customer identifiers or raw database messages are logged. No request log usually means delivery did not reach this deployment; confirm URL, topic and delivery history. `WH_VARIANT_IGNORED` indicates a different variant (also expected for Shopify sample/book orders). `WH_TOPIC_IGNORED` means a topic outside paid/refund/cancel.
+
+- `WH_SIGNATURE`: verify `SHOPIFY_WEBHOOK_SECRET` is the signing secret for the registration method. Manually created Settings → Notifications webhooks use the signing secret shown in that webhook section, not the Dev Dashboard client secret. App-created webhooks use the app's matching signing secret. Update Production and redeploy before retrying the real delivery.
+- `WH_SHOP`: wrong shop-domain header; only the configured myshopify.com store is accepted.
+- `WH_CONFIG` / `WH_NOT_READY`: missing private configuration/readiness.
+- `WH_ORDER_TEST_DISABLED`: test order rejected deliberately. Test-mode grants require an isolated test setup; do not enable them on live accounts just to repair a real payment.
+- `WH_ORDER_FORMAT` / `WH_ORDER_QUANTITY` / `WH_ORDER_PRICE` / `WH_ORDER_LINK_FORMAT`: signed payload failed the required paid GBP digital membership format, quantity, £1.99 amount or link-token format. Inspect the real delivery privately. Never paste a raw order payload publicly.
+- `WH_DB_AUTH` / `WH_DB_SCHEMA` / `WH_DB_PERMISSION`: confirm server key, billing functions/migration, and service-role-only permissions.
+- `WH_DB_ACCOUNT_LINK`: the first order has no usable original checkout link (missing, expired or already redeemed). Preserve the original order and checkout rows for investigation. Do not link an account by email alone.
+- `WH_DB_PAID_PERIOD` / `WH_DB_CUSTOMER_CONFLICT`: database validation rejected a date or conflicting customer mapping.
+- `WH_DB_WRITE` / `WH_INTERNAL`: another database/server failure; inspect server/database diagnostics privately.
+- `WH_RECEIVED`: the signed event was processed/acknowledged. Duplicate orders are idempotent; refunded periods remain revoked.
+
+After correcting the cause, retry/resend the **original paid-order delivery** using Shopify's available delivery controls, or wait for its retry when applicable. A generic Send test notification uses a sample order and cannot activate the real customer's membership. Confirm the matching ledger row and subscription before testing return navigation. Historic delivery recovery must not create a fresh paid date or bypass the original account-link validation.
