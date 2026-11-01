@@ -1,0 +1,2 @@
+export const metadata={title:"About"};
+export default function Page(){return <article className="wrap narrow section"><p className="eyebrow">My Business Checker</p><h1>Small business. Clear answers.</h1><p>My Business Checker is being built to help UK small-business owners understand their numbers.</p><p>Core calculators and supporting explanations will be free. Advanced features for saving, comparing and planning are planned at £1.99 per month.</p><p>We are building in stages. Pages and tools labelled as previews have not completed publication review.</p></article>;}

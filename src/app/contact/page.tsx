@@ -1,0 +1,2 @@
+export const metadata={title:"Contact"};
+export default function Page(){return <article className="wrap narrow section"><p className="eyebrow">My Business Checker</p><h1>Let’s keep things clear.</h1><p>A public contact channel will be added before launch.</p><p>For now, this development preview does not accept enquiries or collect accountant-interest signups. Please do not submit tax records or sensitive financial documents.</p></article>;}
