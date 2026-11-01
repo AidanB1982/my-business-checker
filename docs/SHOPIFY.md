@@ -53,3 +53,9 @@ After adding the Client ID/secret as private Vercel variables, redeploy. No OAut
 ## Diagnosing a disabled checkout button
 
 Open `/api/health` on the deployed app. `billing.configurationIssues` lists missing setting names or a disabled readiness flag, never credential values. `revision` identifies the deployed Git commit when Vercel provides it. If the array is empty but an old tab shows a disabled button, refresh the account page and verify the production deployment/revision. A configured result verifies only presence/format, not the credentials, webhook delivery or Shopify API access. Check Production scope and redeploy after correcting variables.
+
+## Access errors and pricing checkout
+
+Authenticated checkout errors now contain a fixed `SF_` stage code for app authentication, token lookup or token creation. HTTP status and allowlisted schema/permission categories are reported without raw provider messages, request headers, credential values or tokens. A configuration-presence check is distinct from successful app authentication.
+
+The Advanced pricing card starts the same authenticated checkout directly. If sign-in is needed, an HTTP-only, same-site cookie records an allowlisted `/pricing` return destination. The Supabase email callback URL remains unchanged, and successful sign-in returns to pricing without requiring an account-page visit. Existing subscribers/customer mappings still receive the management link rather than a duplicate subscription.

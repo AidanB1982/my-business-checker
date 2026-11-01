@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   applicationName: "My Business Checker",
   appleWebApp: { capable: true, title: "Business Checker", statusBarStyle: "default" },
   icons: { apple: "/icons/apple-touch-icon.png" },
-  metadataBase: new URL(SITE_URL), title: { default: "My Business Checker — Understand your business", template: "%s | My Business Checker" },
+  metadataBase: new URL(SITE_URL), title: { default: "My Business Checker · Understand your business", template: "%s | My Business Checker" },
   description: "Clear UK business tools and guides. Free core calculators, with advanced planning features planned at £1.99 per month.",
 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

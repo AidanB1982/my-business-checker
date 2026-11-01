@@ -4,13 +4,13 @@ import { authenticated,checkOrigin,ApiError,apiError } from '@/lib/api';
 import { hasAdvanced } from '@/lib/entitlements';
 import { createAdmin } from '@/lib/supabase/admin';
 import { billingAvailable,shopifyConfig } from '@/lib/shopify/config';
-import { getStorefrontToken } from '@/lib/shopify/storefront-token';
+import { getStorefrontToken, ShopifyAccessError } from '@/lib/shopify/storefront-token';
 import { checkoutHash } from '@/lib/shopify/core';
 export async function POST(request:Request){try{
  checkOrigin(request);const {supabase,user}=await authenticated();if(!billingAvailable())throw new ApiError(503,'Shopify recurring checkout is still being configured.');
  const {data:subscription,error}=await supabase.from('subscriptions').select('status,current_period_end,billing_customer_id').eq('user_id',user.id).maybeSingle();if(error)throw new ApiError(503,'Your plan could not be checked.');if(hasAdvanced(subscription))throw new ApiError(409,'You already have paid access. Manage your subscription in Shopify.');
  if(subscription?.billing_customer_id?.startsWith('shopify:'))throw new ApiError(409,'Use your Shopify customer account to manage or restart this membership, rather than create a duplicate subscription.');
- const config=shopifyConfig();let storefrontToken:string;try{storefrontToken=await getStorefrontToken(config);}catch{throw new ApiError(502,'Shopify app access could not be established. Check its installation, credentials and Storefront scopes.');}
+ const config=shopifyConfig();let storefrontToken:string;try{storefrontToken=await getStorefrontToken(config);}catch(error){throw new ApiError(502,error instanceof ShopifyAccessError?error.message:'Shopify app access could not be established. Check its installation, credentials and Storefront scopes.');}
  const token=randomBytes(32).toString('hex');const admin=createAdmin();
  const {error:linkError}=await admin.from('shopify_checkout_links').insert({token_hash:checkoutHash(token),user_id:user.id,variant_id:config.variant,expires_at:new Date(Date.now()+24*60*60*1000).toISOString()});if(linkError)throw new ApiError(503,'Checkout could not be prepared. Check the billing migration.');
  const response=await fetch(`https://${config.store}/api/2026-10/graphql.json`,{method:'POST',headers:{'Content-Type':'application/json','X-Shopify-Storefront-Access-Token':storefrontToken},cache:'no-store',signal:AbortSignal.timeout(15000),body:JSON.stringify({query:`mutation CreateMembershipCart($input: CartInput!) { cartCreate(input:$input) { cart { checkoutUrl cost { totalAmount { amount currencyCode } } lines(first:2) { nodes { quantity ... on CartLine { merchandise { ... on ProductVariant { id } } sellingPlanAllocation { sellingPlan { id } } } } } } userErrors { message } } }`,variables:{input:{lines:[{merchandiseId:`gid://shopify/ProductVariant/${config.variant}`,quantity:1,sellingPlanId:`gid://shopify/SellingPlan/${config.plan}`}],attributes:[{key:'mbc_checkout',value:token}],buyerIdentity:{email:user.email}}}})});

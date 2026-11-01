@@ -22,7 +22,7 @@ describe('installed-app Storefront access',()=>{
  });
  it('fails closed when the installed scopes are insufficient',async()=>{
   const fetcher=vi.fn().mockResolvedValueOnce(json({access_token:'fixture-admin-access'})).mockResolvedValueOnce(json({data:{storefrontAccessTokens:{edges:[]}}})).mockResolvedValueOnce(json({data:{storefrontAccessTokenCreate:{storefrontAccessToken:{...token,accessScopes:[]},userErrors:[]}}})).mockResolvedValueOnce(json({data:{storefrontAccessTokens:{edges:[]}}}));
-  await expect(createStorefrontTokenResolver(fetcher)(credentials)).rejects.toThrow(/all three/);
+  await expect(createStorefrontTokenResolver(fetcher)(credentials)).rejects.toThrow(/REQUIRED_SCOPES/);
  });
  it('can reuse a token provisioned by another instance during a creation race',async()=>{
   const fetcher=vi.fn().mockResolvedValueOnce(json({access_token:'fixture-admin-access'})).mockResolvedValueOnce(json({data:{storefrontAccessTokens:{edges:[]}}})).mockResolvedValueOnce(json({data:{storefrontAccessTokenCreate:{storefrontAccessToken:null,userErrors:[{message:'limit'}]}}})).mockResolvedValueOnce(json({data:{storefrontAccessTokens:{edges:[{node:token}]}}}));
@@ -36,5 +36,25 @@ describe('credential configuration does not bypass checkout gating',()=>{
   const {billingAvailable}=await import('../../src/lib/shopify/config');
   const values={SHOPIFY_STOREFRONT_ACCESS_TOKEN:'',SHOPIFY_CLIENT_ID:'fixture-client',SHOPIFY_CLIENT_SECRET:'fixture-secret',SHOPIFY_WEBHOOK_SECRET:'fixture-webhook',SUPABASE_SERVICE_ROLE_KEY:'fixture-admin',SHOPIFY_SUBSCRIPTION_READY:'true'};
   try{for(const [key,value] of Object.entries(values))vi.stubEnv(key,value);expect(billingAvailable()).toBe(true);vi.stubEnv('SHOPIFY_CLIENT_SECRET','');expect(billingAvailable()).toBe(false);vi.stubEnv('SHOPIFY_CLIENT_SECRET','fixture-secret');vi.stubEnv('SHOPIFY_SUBSCRIPTION_READY','false');expect(billingAvailable()).toBe(false);}finally{vi.unstubAllEnvs();}
+ });
+});
+
+describe('safe access-stage diagnostics',()=>{
+ it.each([400,401,403])('identifies a failed credential exchange without response text (%s)',async status=>{
+  const resolve=createStorefrontTokenResolver(vi.fn().mockResolvedValue(json({error:'provider text containing fixture-secret'},status)));
+  await expect(resolve(credentials)).rejects.toThrow(`SF_AUTH_HTTP_${status}`);
+  try{await resolve(credentials);}catch(error){expect(String(error)).not.toContain('fixture-secret');}
+ });
+ it('distinguishes a lookup schema error from rejected credentials',async()=>{
+  const fetcher=vi.fn().mockResolvedValueOnce(json({access_token:'fixture-admin-access'})).mockResolvedValueOnce(json({errors:[{message:'not returned',extensions:{code:'undefinedField'}}]}));
+  await expect(createStorefrontTokenResolver(fetcher)(credentials)).rejects.toThrow('SF_TOKEN_LOOKUP_SCHEMA');
+ });
+ it('distinguishes an Admin access denial from an invalid Client secret',async()=>{
+  const fetcher=vi.fn().mockResolvedValueOnce(json({access_token:'fixture-admin-access'})).mockResolvedValueOnce(json({errors:[{extensions:{code:'ACCESS_DENIED'}}]}));
+  await expect(createStorefrontTokenResolver(fetcher)(credentials)).rejects.toThrow('SF_TOKEN_LOOKUP_PERMISSION');
+ });
+ it('does not expose network error text',async()=>{
+  const fetcher=vi.fn().mockRejectedValue(new Error('private fixture-secret and request headers'));
+  await expect(createStorefrontTokenResolver(fetcher)(credentials)).rejects.toThrow('SF_AUTH_NETWORK');
  });
 });

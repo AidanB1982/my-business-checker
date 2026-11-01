@@ -19,8 +19,12 @@ test('finds a tool and calculates a mileage expense locally',async({page})=>{
 });
 test('displays honest paid plan and sign-in configuration state',async({page})=>{
  await page.goto('/pricing');
- await expect(page.getByText(/£1.99/)).toBeVisible();
- await expect(page.getByText(/You will not be charged/)).toBeVisible();
+ await expect(page.getByText('£1.99 / month',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Subscribe for £1.99/month'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'View your account'})).toHaveCount(0);
+ expect(await page.locator('main').innerText()).not.toContain('—');
+ const health=await (await page.request.get('/api/health')).json();
+ if(!health.billing.configured)await expect(page.getByText(/You will not be charged/)).toBeVisible();
  await page.goto('/account');
  await expect(page).toHaveURL(/sign-in/);
  await expect(page.getByRole('heading',{name:'Welcome back.'})).toBeVisible();
@@ -125,7 +129,7 @@ test('MTD uses the reference year and preserves exemption uncertainty',async({pa
  await expect(page.locator('.result').getByText('2027-04-06',{exact:true})).toBeVisible();
  await page.getByLabel('I may qualify for an exemption').check();
  await page.getByRole('button',{name:'Check MTD timing'}).click();
- await expect(page.locator('.result').getByText('Possible exemption — confirm with HMRC',{exact:true})).toBeVisible();
+ await expect(page.locator('.result').getByText('Possible exemption · confirm with HMRC',{exact:true})).toBeVisible();
 });
 test('salary comparison includes employer NI and does not assume Employment Allowance',async({page})=>{
  await page.goto('/tools/salary-dividend-calculator');
@@ -150,4 +154,14 @@ test('tax extensions and explicit save do not grant anonymous access',async({pag
  await page.getByRole('button',{name:'Save to my account'}).click();
  const response=await denied;expect([401,503]).toContain(response.status());
  await expect(page.getByRole('status')).toContainText(response.status()===401?'Sign in':'Accounts are not configured');
+});
+
+test('pricing starts checkout directly and preserves the sign-in return',async({page})=>{
+ const health=await (await page.request.get('/api/health')).json();
+ await page.goto('/pricing');const subscribe=page.getByRole('button',{name:'Subscribe for £1.99/month'});
+ if(!health.billing.configured){await expect(subscribe).toBeDisabled();return;}
+ const denied=page.waitForResponse(response=>response.url().endsWith('/api/billing/checkout')&&response.request().method()==='POST');
+ await subscribe.click();const response=await denied;
+ if(health.supabase.configured){expect(response.status()).toBe(401);await expect(page).toHaveURL(/\/sign-in\?next=%2Fpricing/);await expect(page.locator('input[name="returnTo"]')).toHaveValue('/pricing');}
+ else{expect(response.status()).toBe(503);await expect(page.getByRole('status')).toContainText('Accounts are not configured');}
 });
