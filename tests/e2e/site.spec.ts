@@ -205,3 +205,21 @@ test('new tools and supporting guides are discoverable',async({page})=>{
  await page.getByRole('link',{name:'Understand how this works'}).click();
  await expect(page.getByRole('heading',{name:'Projecting your pension pot'})).toBeVisible();
 });
+
+test('checkout stays open until confirmed payment then closes and returns to account',async({page,context})=>{
+ const health=await (await page.request.get('/api/health')).json();
+ test.skip(!health.billing.configured,'Use fixture billing environment variables to exercise the mocked checkout flow.');
+ let paid=false;
+ await context.route('https://blackwoodpublishing.myshopify.com/checkout/browser-fixture',route=>route.fulfill({contentType:'text/html',body:'<h1>Shopify checkout fixture</h1>'}));
+ await page.route('**/api/billing/checkout',route=>route.fulfill({json:{url:'https://blackwoodpublishing.myshopify.com/checkout/browser-fixture'}}));
+ await page.route('**/api/billing/status',route=>route.fulfill({json:{advanced:paid}}));
+ await page.goto('/pricing');const subscribe=page.getByRole('button',{name:'Subscribe for £1.99/month'});
+ const opened=page.waitForEvent('popup');await subscribe.click();const checkout=await opened;
+ await expect(checkout.getByRole('heading')).toHaveText('Shopify checkout fixture');
+ await expect(page.getByRole('status')).toContainText('Complete payment in Shopify');
+ await expect(page).toHaveURL(/\/pricing$/);expect(checkout.isClosed()).toBe(false);
+ expect(await checkout.evaluate(()=>window.opener!==null)).toBe(true);
+ const confirmation=page.waitForResponse(async response=>response.url().endsWith('/api/billing/status')&&(await response.json()).advanced===true);
+ paid=true;await confirmation;await expect.poll(()=>checkout.isClosed(),{timeout:10000}).toBe(true);
+ await expect(page).not.toHaveURL(/\/pricing$/);
+});

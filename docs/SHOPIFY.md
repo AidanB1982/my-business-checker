@@ -79,3 +79,9 @@ select to_regclass('public.shopify_checkout_links') as checkout_table,
          then has_table_privilege('service_role', 'public.shopify_checkout_links', 'INSERT')
          else false end as service_role_can_insert;
 ```
+
+## Returning from checkout
+
+Subscribe opens Shopify in a separate browser window/tab and keeps the app open. The app polls its authenticated, uncached `/api/billing/status` endpoint every three seconds for up to twenty minutes. Only an active paid period written by the signed webhook confirms payment. Once confirmed, the app closes the window it opened and navigates to `/account`. The checkout window retains its opener relationship so the app can close it; the server restricts checkout destinations to trusted Shopify/configured checkout hosts. If popups are blocked, the app shows an explicit checkout link. Browser window rules can prevent automatic closing in some environments; the account link remains available. A confirmation timeout does not indicate payment failure and must not encourage a second subscription. No storefront script, checkout-return query parameter or browser callback grants access.
+
+This flow must be verified with a real payment/webhook delivery; browser tests simulate confirmation and do not exercise Shopify payment processing.
