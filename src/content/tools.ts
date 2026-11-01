@@ -4,5 +4,7 @@ export const tools = [
   { slug: "mtd-checker", name: "Making Tax Digital", category: "Planning", description: "Understand which MTD requirements may apply to you.", guide: "making-tax-digital", status: "Preview" },
   { slug: "salary-dividend-calculator", name: "Salary vs dividends", category: "Tax", description: "Explore how you take money from your limited company.", guide: "salary-and-dividends", status: "Preview" },
   { slug: "business-mileage-calculator", name: "Business mileage", category: "Expenses", description: "Estimate an allowance for qualifying business journeys.", guide: "business-mileage", status: "Preview" },
+  { slug: "salary-take-home-calculator", name: "Salary take-home", category: "Tax", description: "Check your salary after tax, student loans and pension deductions.", guide: "salary-take-home", status: "Preview" },
+  { slug: "pension-pot-predictor", name: "Pension pot predictor", category: "Planning", description: "Project your pension from current salary and contribution percentages.", guide: "pension-planning", status: "Preview" },
 ] as const;
 export const categories = ["Tax", "VAT", "Expenses", "Planning", "Property"] as const;

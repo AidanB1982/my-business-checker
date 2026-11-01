@@ -165,3 +165,43 @@ test('pricing starts checkout directly and preserves the sign-in return',async({
  if(health.supabase.configured){expect(response.status()).toBe(401);await expect(page).toHaveURL(/\/sign-in\?next=%2Fpricing/);await expect(page.locator('input[name="returnTo"]')).toHaveValue('/pricing');}
  else{expect(response.status()).toBe(503);await expect(page.getByRole('status')).toContainText('Accounts are not configured');}
 });
+
+test('salary checker distinguishes normal deductions from salary sacrifice and relief claims',async({page})=>{
+ await page.goto('/tools/salary-take-home-calculator');
+ await page.getByLabel(/I understand this assumes standard monthly payroll/).check();
+ await page.getByRole('button',{name:'Check my salary'}).click();
+ await expect(page.locator('.result .metric-row').filter({hasText:'Annual payslip take-home estimate'}).getByRole('definition')).toHaveText('£50,158.00');
+ await page.getByLabel('Pension deduction method').selectOption('salary-sacrifice');
+ await page.getByRole('button',{name:'Check my salary'}).click();
+ await expect(page.locator('.result .metric-row').filter({hasText:'Annual payslip take-home estimate'}).getByRole('definition')).toHaveText('£50,230.00');
+ await page.getByLabel('Pension deduction method').selectOption('relief-at-source');
+ await page.getByRole('button',{name:'Check my salary'}).click();
+ await expect(page.locator('.result').getByText('£49,438.00',{exact:true})).toBeVisible();
+ await expect(page.locator('.result').getByText('£720.00',{exact:true})).toHaveCount(2);
+ await page.getByLabel('What does your percentage represent?').selectOption('net');
+ await page.getByLabel('Your pension contribution (%)').fill('4');
+ await page.getByRole('button',{name:'Check my salary'}).click();
+ await expect(page.locator('.result').getByText('£49,438.00',{exact:true})).toBeVisible();
+});
+test('pension predictor shows an unchanged-salary baseline and yearly chart on mobile',async({page})=>{
+ await page.setViewportSize({width:375,height:812});await page.goto('/tools/pension-pot-predictor');
+ await page.getByLabel('Current annual salary (£)').fill('72000');
+ await page.getByLabel('Target retirement age').fill('45');
+ await page.getByText('Projection assumptions',{exact:true}).click();
+ await page.getByLabel('Annual investment growth before fees (%)').fill('0');
+ await page.getByLabel('Annual pension fee (%)').fill('0');await page.getByLabel('Annual inflation assumption (%)').fill('0');
+ await page.getByRole('button',{name:'Project my pension'}).click();
+ await expect(page.getByRole('heading',{name:'£67,600.00'})).toBeVisible();
+ await expect(page.getByRole('img',{name:'Projected pension pot over time'})).toBeVisible();
+ await page.getByText('Year-by-year figures',{exact:true}).click();
+ await expect(page.getByRole('table')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.getByLabel('Current defined-contribution pension pot (£)').fill('20000');
+ await expect(page.getByRole('heading',{name:'£67,600.00'})).not.toBeVisible();
+});
+test('new tools and supporting guides are discoverable',async({page})=>{
+ await page.goto('/tools');await page.getByRole('searchbox').fill('pension');
+ await page.getByRole('link',{name:/Pension pot predictor/}).click();
+ await page.getByRole('link',{name:'Understand how this works'}).click();
+ await expect(page.getByRole('heading',{name:'Projecting your pension pot'})).toBeVisible();
+});
