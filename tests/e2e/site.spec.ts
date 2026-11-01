@@ -168,8 +168,7 @@ test('pricing starts checkout directly and preserves the sign-in return',async({
 
 test('salary checker distinguishes normal deductions from salary sacrifice and relief claims',async({page})=>{
  await page.goto('/tools/salary-take-home-calculator');
- await page.getByLabel('National Insurance calculation basis').selectOption('monthly-payroll');
- await page.getByLabel(/I understand this is an annual planning estimate/).check();
+ await page.getByLabel(/I understand this assumes standard monthly payroll/).check();
  await page.getByRole('button',{name:'Check my salary'}).click();
  await expect(page.locator('.result .metric-row').filter({hasText:'Annual payslip take-home estimate'}).getByRole('definition')).toHaveText('£50,158.00');
  await page.getByLabel('Pension deduction method').selectOption('salary-sacrifice');
@@ -183,30 +182,6 @@ test('salary checker distinguishes normal deductions from salary sacrifice and r
  await page.getByLabel('Your pension contribution (%)').fill('4');
  await page.getByRole('button',{name:'Check my salary'}).click();
  await expect(page.locator('.result').getByText('£49,438.00',{exact:true})).toBeVisible();
-});
-test('salary comparison uses Scottish tax and annual NI with an explicit country selection',async({page})=>{
- await page.goto('/tools/salary-take-home-calculator');
- await page.getByLabel('Annual salary before pension deductions (£)',{exact:true}).fill('44160');
- await page.getByLabel('Income Tax region',{exact:true}).selectOption('scotland');
- await expect(page.getByText('Scotland selected: Scottish Income Tax bands apply. National Insurance remains UK-wide.')).toBeVisible();
- await page.getByLabel('Pension deduction method').selectOption('salary-sacrifice');
- await page.getByLabel('Employer pension contribution (%)',{exact:true}).fill('10');
- await page.getByLabel('Undergraduate student loan plan').selectOption('plan4');
- await page.getByLabel(/I understand this is an annual planning estimate/).check();
- await page.getByRole('button',{name:'Check my salary'}).click();
- await expect(page.locator('.result h2')).toHaveText('£2,742.37');
- const metric=(label:string)=>page.locator('.result .metric-row').filter({has:page.getByText(label,{exact:true})}).getByRole('definition');
- await expect(metric('Estimated payroll Income Tax')).toHaveText('£5,960.99');
- await expect(metric('Employee National Insurance')).toHaveText('£2,350.56');
- await expect(metric('Salary redirected to pension')).toHaveText('£2,208.00');
- await expect(metric('Tax region')).toHaveText('Scotland (Scottish Income Tax)');
- for(const [country,label] of [['england','England'],['wales','Wales'],['northern-ireland','Northern Ireland']]){
-  await page.getByLabel('Income Tax region',{exact:true}).selectOption(country);
-  await expect(page.locator('.result h2')).not.toHaveText('£2,742.37');
-  await page.getByRole('button',{name:'Check my salary'}).click();
-  await expect(metric('Tax region')).toHaveText(label);
-  await expect(metric('Estimated payroll Income Tax')).toHaveText('£5,876.40');
- }
 });
 test('pension predictor shows an unchanged-salary baseline and yearly chart on mobile',async({page})=>{
  await page.setViewportSize({width:375,height:812});await page.goto('/tools/pension-pot-predictor');

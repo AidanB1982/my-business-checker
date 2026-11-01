@@ -10,7 +10,6 @@ export const employeeSalaryInput=z.object({
  pensionMethod:z.enum(['none','salary-sacrifice','net-pay','relief-at-source']),
  pensionBasis:z.enum(['full-salary','qualifying-earnings']),
  rasRateBasis:z.enum(['gross','net']).optional().default('gross'),
- niBasis:z.enum(['monthly-payroll','annual-estimate']).optional().default('monthly-payroll'),
  studentPlan:z.enum(['none','plan1','plan2','plan4','plan5']).optional().default('none'),
  postgraduateLoan:z.boolean().optional().default(false),
 }).strict();
@@ -39,9 +38,7 @@ export function calculateEmployeeSalary(raw:EmployeeSalaryInput){
  // pension deductions do not reduce this pay; salary sacrifice does.
  const monthlyStudentLoanPence=input.studentPlan==='none'?0:Math.floor(Math.max(0,monthlyCashPence-Math.floor((loanRules[input.studentPlan]??0)*100/12))*9/10000)*100;
  const monthlyPostgraduatePence=input.postgraduateLoan?Math.floor(Math.max(0,monthlyCashPence-Math.floor(loanRules.postgraduate*100/12))*6/10000)*100:0;
- // Annual planning basis is optional; existing saved inputs retain monthly payroll NI.
- const annualNIPence=Math.round(Math.max(0,Math.min(cashSalaryPence,rules.annualNIUpperPence)-rules.annualNIPrimaryPence)*rules.employeeNIMainRate)+Math.round(Math.max(0,cashSalaryPence-rules.annualNIUpperPence)*rules.employeeNIUpperRate);
- const employeeNIPence=input.niBasis==='annual-estimate'?annualNIPence:monthlyNIPence*12,studentLoanPence=monthlyStudentLoanPence*12,postgraduateLoanPence=monthlyPostgraduatePence*12;
+ const employeeNIPence=monthlyNIPence*12,studentLoanPence=monthlyStudentLoanPence*12,postgraduateLoanPence=monthlyPostgraduatePence*12;
  const takeHomePence=cashSalaryPence-payslipIncomeTax.totalPence-employeeNIPence-payslipPensionPence-studentLoanPence-postgraduateLoanPence;
  if(takeHomePence<0)throw new Error('These pension and payroll deductions exceed the pay available. Reduce the percentage or check the payroll arrangement.');
  const employerNI=(monthlyPay:number)=>Math.round(Math.max(0,monthlyPay-rules.monthlyEmployerNIThresholdPence)*rules.employerNIRate)*12;

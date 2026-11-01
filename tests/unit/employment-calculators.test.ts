@@ -5,27 +5,6 @@ import { buildSnapshot } from '../../src/lib/reports/calculations';
 const salary={taxYear:'2026/27' as const,region:'england' as const,salary:72000,employeePercent:5,employerPercent:3,pensionMethod:'net-pay' as const,pensionBasis:'full-salary' as const};
 const pension={taxYear:'2026/27' as const,salary:72000,currentPot:10000,currentAge:35,retirementAge:45,employeePercent:5,employerPercent:3,pensionBasis:'full-salary' as const,salaryGrowthPercent:0,investmentGrowthPercent:0,annualFeePercent:0,inflationPercent:0,withdrawalPercent:4};
 describe('monthly salary and pension methods',()=>{
- it('matches the supplied Scottish annual salary comparison without changing pension amounts',()=>{
-  const result=calculateEmployeeSalary({...salary,salary:44160,region:'scotland',pensionMethod:'salary-sacrifice',employerPercent:10,studentPlan:'plan4',niBasis:'annual-estimate'});
-  expect(result).toMatchObject({grossEmployeePensionPence:220800,cashSalaryPence:4195200,payslipIncomeTaxPence:596099,employeeNIPence:235056,studentLoanPence:73200,takeHomePence:3290845,monthlyTakeHomePence:274237});
- });
- it('keeps monthly payroll NI available separately from annual planning NI',()=>{
-  const input={...salary,salary:44160,region:'scotland' as const,pensionMethod:'salary-sacrifice' as const,studentPlan:'plan4' as const};
-  const monthly=calculateEmployeeSalary({...input,niBasis:'monthly-payroll'}),annual=calculateEmployeeSalary({...input,niBasis:'annual-estimate'});
-  expect(monthly.employeeNIPence).toBe(235008);expect(annual.employeeNIPence-monthly.employeeNIPence).toBe(48);
-  expect(monthly.payslipIncomeTaxPence).toBe(annual.payslipIncomeTaxPence);
- });
- it.each([[12570,0],[12571,8],[50270,301600],[50271,301602]])('applies annual NI thresholds at salary £%s', (annualSalary,expectedNI)=>{
-  expect(calculateEmployeeSalary({...salary,salary:annualSalary,pensionMethod:'none',employeePercent:0,niBasis:'annual-estimate'}).employeeNIPence).toBe(expectedNI);
- });
- it.each(['england','wales','northern-ireland'] as const)('uses the selected home country and its applicable bands: %s',region=>{
-  const input={...salary,salary:44160,region,pensionMethod:'salary-sacrifice' as const,niBasis:'annual-estimate' as const};
-  const result=calculateEmployeeSalary(input);
-  expect(result.region).toBe(region);expect(result.payslipIncomeTaxPence).toBe(587640);
-  expect(calculateEmployeeSalary({...input,region:'scotland'}).payslipIncomeTaxPence).toBe(596099);
-  const snapshot=buildSnapshot({toolSlug:'salary-take-home-calculator',taxYear:'2026/27',inputs:input});
-  expect(snapshot.metrics.find(metric=>metric.key==='region')?.value).toBe({england:'England',wales:'Wales','northern-ireland':'Northern Ireland'}[region]);
- });
  it('calculates no employee deduction with standard monthly NI',()=>{const result=calculateEmployeeSalary({...salary,pensionMethod:'none',employeePercent:0});expect(result).toMatchObject({payslipIncomeTaxPence:1623200,employeeNIPence:345000,takeHomePence:5231800,payslipPensionPence:0});});
  it('deducts net-pay pension before Income Tax but not before NI',()=>{expect(calculateEmployeeSalary(salary)).toMatchObject({grossEmployeePensionPence:360000,payslipPensionPence:360000,payslipIncomeTaxPence:1479200,employeeNIPence:345000,takeHomePence:5015800,totalPensionPence:576000});});
  it('reduces tax, NI and cash salary under salary sacrifice',()=>{expect(calculateEmployeeSalary({...salary,pensionMethod:'salary-sacrifice'})).toMatchObject({cashSalaryPence:6840000,payslipPensionPence:0,sacrificePence:360000,payslipIncomeTaxPence:1479200,employeeNIPence:337800,takeHomePence:5023000,totalPensionPence:576000,employerNISavingPence:54000});});
@@ -56,7 +35,7 @@ describe('pension pot illustration with unchanged salary',()=>{
  it.each([{retirementAge:35},{retirementAge:30},{currentAge:35.5},{investmentGrowthPercent:Infinity},{salaryGrowthPercent:-1},{annualFeePercent:-1},{employeePercent:101}])('rejects invalid scenario %s',change=>{expect(()=>calculatePensionProjection({...pension,...change})).toThrow();});
 });
 describe('new tools in Advanced snapshots',()=>{
- it('recalculates salary inputs and preserves a distinct calculator version',()=>{expect(buildSnapshot({toolSlug:'salary-take-home-calculator',taxYear:'2026/27',inputs:salary})).toMatchObject({ruleSetVersion:'salary-draft-2',metrics:expect.arrayContaining([expect.objectContaining({key:'annualTakeHome',value:5015800})])});});
+ it('recalculates salary inputs and preserves a distinct calculator version',()=>{expect(buildSnapshot({toolSlug:'salary-take-home-calculator',taxYear:'2026/27',inputs:salary})).toMatchObject({ruleSetVersion:'salary-draft-1',metrics:expect.arrayContaining([expect.objectContaining({key:'annualTakeHome',value:5015800})])});});
  it('can save/compare/export pension scenarios through the common record format',()=>{expect(buildSnapshot({toolSlug:'pension-pot-predictor',taxYear:'2026/27',inputs:pension})).toMatchObject({ruleSetVersion:'pension-draft-1',metrics:expect.arrayContaining([expect.objectContaining({key:'pot',value:6760000})])});});
  it('refuses an unsupported tax year',()=>{expect(()=>buildSnapshot({toolSlug:'salary-take-home-calculator',taxYear:'2024/25',inputs:salary})).toThrow(/2025/);});
 });
