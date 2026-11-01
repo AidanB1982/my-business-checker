@@ -1,0 +1,7 @@
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+export function RecoverPayment(){
+ const router=useRouter();const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ return <details><summary>Already paid? Check an existing payment</summary><p>Enter your Shopify order number to check a payment made through this app. This does not charge you again.</p><form onSubmit={async event=>{event.preventDefault();const form=event.currentTarget;setBusy(true);setMessage('');try{const response=await fetch('/api/billing/recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderNumber:new FormData(form).get('orderNumber')})});const body=await response.json();if(!response.ok)throw new Error(body.error);setMessage(body.advanced?'Payment confirmed. Your Advanced account is ready.':'Payment checked. Its paid period is no longer active; check your Shopify subscription.');router.refresh();}catch(error){setMessage(error instanceof Error?error.message:'Your payment could not be checked.');}finally{setBusy(false);}}}><label htmlFor="recovery-order">Shopify order number</label><input id="recovery-order" name="orderNumber" type="text" placeholder="#1018" maxLength={41} required/><button className="button secondary" type="submit" disabled={busy}>{busy?'Checking payment…':'Check existing payment'}</button></form>{message&&<p role="status">{message}</p>}</details>;
+}

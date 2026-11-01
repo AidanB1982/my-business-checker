@@ -1,0 +1,15 @@
+import { describe,it,expect,vi } from 'vitest';
+vi.mock('server-only',()=>({}));
+import { readRecoverableOrder } from '../../src/lib/shopify/recover-order';
+import { checkoutHash } from '../../src/lib/shopify/core';
+const config={store:'blackwoodpublishing.myshopify.com',clientId:'fixture-id',clientSecret:'fixture-secret',variant:'404',allowTest:false};
+const money=(amount:string)=>({shopMoney:{amount,currencyCode:'GBP'}});
+const fixture=()=>({name:'#1018',legacyResourceId:'101',displayFinancialStatus:'PAID',currencyCode:'GBP',taxesIncluded:true,test:false,cancelledAt:null,customer:{legacyResourceId:'202'},customAttributes:[{key:'mbc_checkout',value:'a'.repeat(64)}],totalPriceSet:money('1.99'),totalRefundedSet:money('0.00'),lineItems:{pageInfo:{hasNextPage:false},nodes:[{id:'gid://shopify/LineItem/303',variant:{legacyResourceId:'404'},quantity:1,requiresShipping:false,originalUnitPriceSet:money('1.99'),taxLines:[{priceSet:money('0.33')}]}]},transactions:[{kind:'SALE',status:'SUCCESS',processedAt:'2026-11-01T17:50:00Z',amountSet:money('1.99')}]});
+const json=(body:unknown)=>new Response(JSON.stringify(body));
+function fetcher(order=fixture()){return vi.fn().mockResolvedValueOnce(json({access_token:'fixture-admin-token'})).mockResolvedValueOnce(json({data:{orders:{nodes:[order]}}}));}
+describe('existing payment verification',()=>{
+ it('uses the original successful payment date and opaque checkout attribute',async()=>{const fetch=fetcher();const result=await readRecoverableOrder(config,'1018',fetch);expect(result).toMatchObject({orderId:'101',paidAt:'2026-11-01T17:50:00Z',periodEnd:'2026-12-01T17:50:00.000Z',tokenHash:checkoutHash('a'.repeat(64))});expect(JSON.parse(fetch.mock.calls[1][1].body).variables.query).toBe('name:#1018');});
+ it.each(['unpaid','refunded','cancelled','test','shipping','wrong-variant','authorization','wrong-price','no-payment-date','extra-lines','wrong-name'])('rejects %s orders',async change=>{const order=fixture();switch(change){case 'unpaid':order.displayFinancialStatus='PENDING';break;case 'refunded':order.totalRefundedSet=money('1.99');break;case 'cancelled':Object.assign(order,{cancelledAt:'2026-11-01T18:00:00Z'});break;case 'test':order.test=true;break;case 'shipping':order.lineItems.nodes[0].requiresShipping=true;break;case 'wrong-variant':order.lineItems.nodes[0].variant.legacyResourceId='999';break;case 'authorization':order.transactions[0].kind='AUTHORIZATION';break;case 'wrong-price':order.totalPriceSet=money('2.99');break;case 'no-payment-date':Object.assign(order.transactions[0],{processedAt:null});break;case 'extra-lines':order.lineItems.nodes.push(order.lineItems.nodes[0]);break;case 'wrong-name':order.name='#1019';}
+ await expect(readRecoverableOrder(config,'1018',fetcher(order))).rejects.toThrow();});
+ it('reports required order permissions without provider messages',async()=>{const fetch=vi.fn().mockResolvedValueOnce(json({access_token:'fixture-admin-token'})).mockResolvedValueOnce(json({errors:[{message:'private provider text',extensions:{code:'ACCESS_DENIED'}}]}));await expect(readRecoverableOrder(config,'1018',fetch)).rejects.toThrow('REC_ACCESS');});
+});
