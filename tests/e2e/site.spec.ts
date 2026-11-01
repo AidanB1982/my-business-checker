@@ -231,7 +231,7 @@ test('tool catalogue filters categories and combines them with search',async({pa
  await expect(page.getByRole('button',{name:'Planning',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('searchbox').fill('pension');await expect(page.locator('.tool-card')).toHaveCount(1);
  await page.getByRole('button',{name:'Expenses',exact:true}).click();await expect(page.getByRole('heading',{name:'No tools found'})).toBeVisible();
- await page.getByRole('button',{name:'Show all tools'}).click();await expect(page.locator('.tool-card')).toHaveCount(10);
+ await page.getByRole('button',{name:'Show all tools'}).click();await expect(page.locator('.tool-card')).toHaveCount(11);
 });
 test('redesigned pages keep navigation and content within a narrow mobile viewport',async({page})=>{
  await page.setViewportSize({width:375,height:812});
@@ -271,4 +271,26 @@ test('native reading is discoverable and Advanced lesson bodies stay protected',
  await page.goto('/landlords');await page.getByRole('link',{name:/Gross rent and agent statements/}).click();await page.getByText('Show the working and explanation',{exact:true}).click();await expect(page.getByText(/Gross rent collected is £1,200/)).toBeVisible();
  await page.goto('/learn/sole-trader-bank-review');await expect(page.getByRole('heading',{name:'A little deeper with Advanced.'})).toBeVisible();expect(await page.content()).not.toContain('Use the closing statement balance and the bookkeeping balance for the same account and date.');
  for(const path of ['/sole-traders','/landlords','/learn/profit-cash-and-drawings']){await page.setViewportSize({width:375,height:812});await page.goto(path);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),path).toBe(true);}
+});
+
+test('landlord mortgage planner separates yield from financed cash flow',async({page})=>{
+ await page.goto('/landlords');await page.getByRole('link',{name:/Rental yield and mortgage planner/}).click();
+ await page.getByRole('button',{name:'Plan my yield and mortgage'}).click();await expect(page.locator('.result h2')).toHaveText('6.00%');
+ await expect(page.locator('.result .metric-row').filter({hasText:'Net operating yield before finance'}).getByRole('definition')).toHaveText('4.00%');
+ await expect(page.locator('.result .metric-row').filter({hasText:'First-year cash flow after regular mortgage payments'}).getByRole('definition')).toHaveText('£500.00');
+ await expect(page.locator('.result')).toContainText('Interest-only capital still owing at term end: £150,000.00');
+ await page.getByText('Cash return, break-even and mortgage detail',{exact:true}).click();
+ await expect(page.locator('.result .metric-row').filter({hasText:'First-year cash-on-cash return before tax'}).getByRole('definition')).toHaveText('0.83%');
+ await expect(page.locator('.yield-stress')).toContainText('£875.00');await expect(page.locator('.yield-stress')).toContainText('-£2,500.00');
+ await page.getByLabel('Mortgage repayment type').selectOption('repayment');await expect(page.locator('.result h2')).not.toHaveText('6.00%');
+ await page.getByRole('button',{name:'Plan my yield and mortgage'}).click();await expect(page.locator('.result .metric-row').filter({hasText:'Illustrated regular monthly mortgage payment'}).getByRole('definition')).toHaveText('£876.89');
+ await expect(page.locator('.result .metric-row').filter({hasText:'First-year cash flow after regular mortgage payments'}).getByRole('definition')).toHaveText('-£2,522.68');
+ await page.getByText('Year-by-year mortgage illustration',{exact:true}).click();const last=page.locator('.mortgage-schedule tbody tr').last();await expect(last.getByRole('cell').last()).toHaveText('£0.00');
+});
+test('rental planner handles weekly rent and an unfinanced property on mobile',async({page})=>{
+ await page.setViewportSize({width:375,height:812});await page.goto('/tools/rental-yield-mortgage-planner');
+ await page.getByLabel('Rent frequency').selectOption('weekly');await page.getByLabel('Weekly scheduled rent (£)').fill('200');await page.getByLabel('Mortgage amount or remaining balance (£)').fill('0');
+ await page.getByRole('button',{name:'Plan my yield and mortgage'}).click();await expect(page.locator('.result h2')).toHaveText('5.20%');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.getByLabel('Property value basis').selectOption('current-value');await expect(page.getByLabel('Your actual cash invested, if known (£)')).toBeVisible();
 });

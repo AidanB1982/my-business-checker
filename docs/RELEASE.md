@@ -54,3 +54,9 @@ Validation includes all calculator/API/database tests, browser checks for catego
 Added `/sole-traders` and `/landlords`, adapting the owner's two manuscripts and companion workbook structures into native app experiences. Nine short lessons follow explanation, worked example, checks and related-tool links; five deeper lessons have server-enforced Advanced access. Original books and workbooks are not served as downloads.
 
 Added monthly sole-trader working, landlord rent/agent reconciliation and a timing-aware property maintenance reserve plan, taking the catalogue to ten. Each supports the existing validated snapshot/save/compare/report path without a database migration. These are focused working areas rather than full bookkeeping software, HMRC submission, rental-tax computation or compliance certification. Scope, provenance, formulas and fixtures are recorded in `docs/NATIVE-SECTIONS.md`.
+
+## Rental yield and mortgage planning
+
+Added `/tools/rental-yield-mortgage-planner` to Landlords, with a supporting free native lesson and guide. The app now has eleven calculator/working areas and ten native lessons (five free and five Advanced). The planner separates scheduled/effective gross yield, net operating yield before finance, before-tax cash flow, own-cash returns and capital repayment. It supports weekly/monthly rent, voids, annual costs, interest-only/repayment comparison, higher-rate scenarios, LTV, break-even measures and a year-by-year mortgage table.
+
+Advanced can save, compare and report these scenarios. Percentage metrics are backward-compatible additions to snapshot validation, and comparison differences use percentage points (pp). No database migration, new setting or original-file download is introduced. See `docs/RENTAL-YIELD.md` for definitions, limitations and independently checked amortisation fixtures.

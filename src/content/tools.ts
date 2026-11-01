@@ -9,5 +9,6 @@ export const tools = [
   { slug: "sole-trader-working-sheet", name: "Sole trader monthly working", category: "Records", description: "Separate receipts, costs, drawings and your planned reserve.", guide: "sole-trader-working", status: "Preview" },
   { slug: "landlord-rent-reconciliation", name: "Landlord rent reconciliation", category: "Property", description: "Track arrears and advance rent, and reconcile your agent statement.", guide: "landlord-rent-records", status: "Preview" },
   { slug: "property-maintenance-reserve", name: "Property maintenance reserve", category: "Property", description: "Plan component replacements and see when your reserve needs funding.", guide: "property-maintenance-planning", status: "Preview" },
+  { slug: "rental-yield-mortgage-planner", name: "Rental yield and mortgage planner", category: "Property", description: "Compare rental yields, mortgage types, cash flow and higher-rate scenarios.", guide: "rental-yield-and-mortgages", status: "Preview" },
 ] as const;
 export const categories = ["Tax", "VAT", "Expenses", "Planning", "Property", "Records"] as const;

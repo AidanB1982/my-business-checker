@@ -9,8 +9,8 @@ The reusable reading pattern is: explanation → small worked example → reveal
 ## Routes and access
 
 - `/sole-traders`: monthly working, existing tax/mileage/VAT links and four adapted lessons.
-- `/landlords`: rent controls, reserve planning, MTD and five adapted lessons.
-- `/learn/[slug]`: four free lessons and five Advanced lessons. Paid bodies come from a server-only content module and are rendered only after checking the signed-in user's active paid period. An expired, missing or failed plan check never sends the protected body to the browser. Public summaries/titles remain visible.
+- `/landlords`: rent controls, reserve planning, MTD and six adapted lessons.
+- `/learn/[slug]`: five free lessons and five Advanced lessons. Paid bodies come from a server-only content module and are rendered only after checking the signed-in user's active paid period. An expired, missing or failed plan check never sends the protected body to the browser. Public summaries/titles remain visible.
 - `/tools/sole-trader-working-sheet`: browser-local monthly records summary.
 - `/tools/landlord-rent-reconciliation`: browser-local rent and agent statement control.
 - `/tools/property-maintenance-reserve`: browser-local 5/15/30-year component reserve scenario.

@@ -40,9 +40,11 @@ Scottish and mileage rate tables match the primary-source extracts supplied by t
 
 ## Native sole-trader and landlord sections
 
-`/sole-traders` and `/landlords` adapt the supplied Blackwood Publishing books/workbooks into native working areas and nine lessons (four free, five Advanced). No original DOCX/XLSX files are distributed. `/learn/[slug]` checks premium access on the server and preserves a safe lesson destination through email sign-in.
+`/sole-traders` and `/landlords` adapt the supplied Blackwood Publishing books/workbooks into native working areas and ten lessons (five free, five Advanced). No original DOCX/XLSX files are distributed. `/learn/[slug]` checks premium access on the server and preserves a safe lesson destination through email sign-in.
 
-Three additional free working areas bring the catalogue to ten: sole-trader monthly working, landlord rent/agent reconciliation, and property maintenance reserve planning. Advanced users can save canonical snapshots, compare matching tools and export the existing reports. These are focused workings, not complete bookkeeping ledgers, rental-tax engines or compliance certification. See [native section scope](docs/NATIVE-SECTIONS.md).
+The native sections include three free working areas: sole-trader monthly working, landlord rent/agent reconciliation, and property maintenance reserve planning. Advanced users can save canonical snapshots, compare matching tools and export the existing reports. These are focused workings, not complete bookkeeping ledgers, rental-tax engines or compliance certification. See [native section scope](docs/NATIVE-SECTIONS.md).
+
+A rental-yield and mortgage planner brings the catalogue to eleven: gross/effective/net operating yields, repayment or interest-only borrowing, first-year cash flow, cash invested/return, break-even metrics, a higher-rate scenario and a mortgage schedule. See [rental planner assumptions](docs/RENTAL-YIELD.md).
 
 ## Advanced workspace
 
