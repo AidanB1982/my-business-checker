@@ -1,5 +1,5 @@
 import type { TaxYear } from './self-employed';
-const shared={version:'salary-draft-1',monthlyNIPrimaryPence:104800,monthlyNIUpperPence:418900,employeeNIMainRate:0.08,employeeNIUpperRate:0.02,monthlyEmployerNIThresholdPence:41700,employerNIRate:0.15,qualifyingLowerPence:624000,qualifyingUpperPence:5027000,reliefAtSourceRate:0.2,sourceReview:'pending' as const};
+const shared={version:'salary-draft-2',annualNIPrimaryPence:1257000,annualNIUpperPence:5027000,monthlyNIPrimaryPence:104800,monthlyNIUpperPence:418900,employeeNIMainRate:0.08,employeeNIUpperRate:0.02,monthlyEmployerNIThresholdPence:41700,employerNIRate:0.15,qualifyingLowerPence:624000,qualifyingUpperPence:5027000,reliefAtSourceRate:0.2,sourceReview:'pending' as const};
 export const employmentRules:Readonly<Record<TaxYear,Readonly<typeof shared>>> = Object.freeze({
  '2025/26':Object.freeze({...shared}),'2026/27':Object.freeze({...shared}),
 });

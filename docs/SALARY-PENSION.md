@@ -4,9 +4,9 @@
 
 Route: `/tools/salary-take-home-calculator`.
 
-Inputs: tax year (2025/26 or 2026/27), UK tax region, annual reference salary, employee/employer pension percentages, contribution basis, pension method, one undergraduate student-loan plan and optional postgraduate loan.
+Inputs: tax year (2025/26 or 2026/27), UK tax region, NI calculation basis, annual reference salary, employee/employer pension percentages, contribution basis, pension method, one undergraduate student-loan plan and optional postgraduate loan.
 
-The percentage can be based on full original/reference salary or the draft qualifying-earnings band (£6,240–£50,270). Employer contribution percentages use the same basis, including for salary sacrifice; a real employer may have a different policy. Income Tax uses the existing regional rule snapshots. Monthly category A NI in the employment draft uses a £1,048 primary threshold, £4,189 upper limit and 8%/2% employee rates for both supported years. Student/postgraduate deductions use NI cash pay and the selected year's monthly loan threshold, rounded down to whole pounds per month. These new payroll assumptions need independent official-source review.
+The percentage can be based on full original/reference salary or the draft qualifying-earnings band (£6,240–£50,270). Employer contribution percentages use the same basis, including for salary sacrifice; a real employer may have a different policy. Income Tax uses the existing regional rule snapshots. The live form defaults to an annual salary comparison: employee NI uses £12,570/£50,270 annual thresholds at 8%/2%. The monthly-payroll option uses a £1,048 primary threshold, £4,189 upper limit and 8%/2% employee rates for both supported years. Student/postgraduate deductions use NI cash pay and the selected year's monthly loan threshold, rounded down to whole pounds per month. These new payroll assumptions need independent official-source review.
 
 - **Salary sacrifice:** the selected gross employee-directed amount reduces contractual cash salary. Tax, NI and student-loan bases reduce accordingly. It is pension funding paid by the employer, not an additional cash deduction. The total pension credit is this amount plus the employer's base contribution, counted once.
 - **Net pay:** the employee pension contribution reduces taxable pay, but not NI/student-loan pay. The contribution is deducted in full from cash.
@@ -14,7 +14,11 @@ The percentage can be based on full original/reference salary or the draft quali
 
 The calculation assumes standard full-year monthly employee payroll, age 21 or over and below State Pension age. It does not implement a personalised tax code, cumulative PAYE history, bonuses, benefits in kind, multiple jobs, director annual NI, pension allowance charges, loan-balance caps, multiple undergraduate plans, salary-sacrifice minimum-wage tests or scheme eligibility. Monthly take-home is an annual planning average and may differ from an actual payslip. Employer NI savings are gross liability differences before allowances and are not automatically credited to the pension.
 
-Fixture at £72,000, 5% gross employee pension and 3% employer pension, full salary, England, 2026/27, no loans: net-pay take-home £50,158/year; salary-sacrifice £50,230/year; relief-at-source payslip cash £49,438/year plus £720 additional relief potentially claimable. Each credits £5,760/year to the pension under the stated employer policy.
+Monthly-payroll NI fixture at £72,000, 5% gross employee pension and 3% employer pension, full salary, England, 2026/27, no loans: net-pay take-home £50,158/year; salary-sacrifice £50,230/year; relief-at-source payslip cash £49,438/year plus £720 additional relief potentially claimable. Each credits £5,760/year to the pension under the stated employer policy.
+
+Scotland selects the Scottish bands; England, Wales and Northern Ireland retain their selected country identity and use their applicable shared effective bands for the supported years. At £44,160 salary, Scotland, 2026/27, 5% full-salary sacrifice, Plan 4 and annual-estimate NI, the result is £5,960.99 Income Tax, £2,350.56 NI, £732 loan deductions and £32,908.45 annual / £2,742.37 monthly take-home. Pension sacrifice is £2,208 a year (£184 a month). The monthly-payroll option gives £2,350.08 NI and £2,742.41 monthly take-home.
+
+Existing saved inputs without an NI basis retain monthly-payroll calculation when recalculated; new form submissions explicitly record their chosen basis. The employment snapshot version is `salary-draft-2`. Annual NI comparisons do not implement a director-specific cumulative payroll method.
 
 ## Pension pot predictor
 
