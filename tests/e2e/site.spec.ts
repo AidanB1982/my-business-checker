@@ -40,7 +40,7 @@ test('self-employed tax shows a breakdown and invalidates stale results',async({
  await page.getByLabel(/I meet the age/).check();
  await page.getByRole('button',{name:'Calculate my take-home'}).click();
  await expect(page.getByRole('heading',{name:'£44,951.40'})).toBeVisible();
- await expect(page.getByText('£13,048.60',{exact:true})).toBeVisible();
+ await expect(page.getByRole('definition').filter({hasText:'£13,048.60'})).toBeVisible();
  await expect(page.getByText('£1,087.39 each month',{exact:true})).toBeVisible();
  await page.getByText('Why is it that number?').click();
  await expect(page.getByText(/Total Income Tax on business profit/)).toBeVisible();
@@ -101,4 +101,53 @@ test('installable manifest, icons and offline navigation are available',async({p
  await context.setOffline(false);
  await page.getByRole('button',{name:'Try again'}).click();
  await expect(page.getByRole('heading',{name:'Your business toolbox.'})).toBeVisible();
+});
+
+test('VAT checks rolling turnover and the separate forecast without combining them',async({page})=>{
+ await page.goto('/tools/vat-threshold-checker');
+ const months=page.getByLabel(/taxable turnover \(£\)$/);await expect(months).toHaveCount(12);
+ for(const month of await months.all())await month.fill('7500');
+ await page.getByRole('button',{name:'Check VAT position'}).click();
+ await expect(page.locator('.result').getByText('Below these two tests',{exact:true})).toBeVisible();
+ await page.getByLabel('Expected taxable turnover in the next 30 days alone (£)').fill('90000.01');
+ await page.getByRole('button',{name:'Check VAT position'}).click();
+ await expect(page.locator('.result').getByText('Check registration now',{exact:true})).toBeVisible();
+ await expect(page.locator('.result').getByText('Above threshold',{exact:true})).toHaveCount(1);
+});
+test('MTD uses the reference year and preserves exemption uncertainty',async({page})=>{
+ await page.goto('/tools/mtd-checker');
+ await page.getByLabel('Gross self-employment income before expenses (£)').fill('50000');
+ await page.getByLabel('Your share of gross property income (£)').fill('1');
+ await page.getByRole('button',{name:'Check MTD timing'}).click();
+ await expect(page.locator('.result').getByText('2026-04-06',{exact:true})).toBeVisible();
+ await page.getByLabel('Income reference tax year').selectOption('2025/26');
+ await page.getByRole('button',{name:'Check MTD timing'}).click();
+ await expect(page.locator('.result').getByText('2027-04-06',{exact:true})).toBeVisible();
+ await page.getByLabel('I may qualify for an exemption').check();
+ await page.getByRole('button',{name:'Check MTD timing'}).click();
+ await expect(page.locator('.result').getByText('Possible exemption — confirm with HMRC',{exact:true})).toBeVisible();
+});
+test('salary comparison includes employer NI and does not assume Employment Allowance',async({page})=>{
+ await page.goto('/tools/salary-dividend-calculator');
+ await page.getByRole('button',{name:'Compare salary and dividends'}).click();
+ await expect(page.locator('.result').getByText('£1,135.50',{exact:true})).toBeVisible();
+ await page.getByLabel('The company is eligible for Employment Allowance and the full allowance is unused').check();
+ await page.getByRole('button',{name:'Compare salary and dividends'}).click();
+ await expect(page.locator('.result').getByText('£1,135.50',{exact:true})).not.toBeVisible();
+ await expect(page.locator('.result').getByText('Chosen mix: personal take-home',{exact:true})).toBeVisible();
+});
+test('tax extensions and explicit save do not grant anonymous access',async({page})=>{
+ await page.goto('/tools/self-employed-tax-calculator');
+ await page.getByText('Pension, student loans and tax payments',{exact:true}).click();
+ await page.getByLabel('Net relief-at-source pension paid (£)').fill('8000');
+ await page.getByLabel('Undergraduate student loan plan').selectOption('plan2');
+ await page.getByLabel(/I meet the age/).check();
+ await page.getByRole('button',{name:'Calculate my take-home'}).click();
+ await expect(page.getByRole('heading',{name:'£35,922.40'})).toBeVisible();
+ await page.getByLabel('Calculation name').fill('Next year');
+ await page.getByLabel('Save these financial figures securely to my account.').check();
+ const denied=page.waitForResponse(response=>response.url().endsWith('/api/calculations')&&response.request().method()==='POST');
+ await page.getByRole('button',{name:'Save to my account'}).click();
+ const response=await denied;expect([401,503]).toContain(response.status());
+ await expect(page.getByRole('status')).toContainText(response.status()===401?'Sign in':'Accounts are not configured');
 });

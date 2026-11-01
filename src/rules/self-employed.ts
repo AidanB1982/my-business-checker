@@ -19,12 +19,12 @@ export type SelfEmployedRules = Readonly<{
   scottishBands?: readonly IncomeTaxBand[];
   scottishSourceReview?: "provided-hmrc-extract";
 }>;
-// Draft-2 adds Scottish regional bands from the GOV.UK extract supplied on
+// Draft-3 retains Scottish regional bands from the GOV.UK extract supplied on
 // 1 November 2026. Upper bounds are taxable-income limits after the standard
 // allowance, not gross-income labels. Class 4 NI is UK-wide. New published
 // snapshots require a new version and fixtures; live source retrieval is not claimed.
 const common = {
-  version: "draft-2", personalAllowancePence: 1257000,
+  version: "draft-3", personalAllowancePence: 1257000,
   allowanceTaperStartPence: 10000000, basicBandPence: 3770000,
   additionalRateThresholdPence: 12514000, basicRate: 0.2,
   higherRate: 0.4, additionalRate: 0.45,

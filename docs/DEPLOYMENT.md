@@ -23,4 +23,4 @@ Device installation must still be tested on real phones. Browser tests validate 
 
 ## Current preview limitations
 
-The tax rules still await independent official HMRC source review. Keep preview labels and robots restrictions. Billing and most calculators remain unfinished. The privacy, contact and operator details need review before a general public launch. Hosting a preview is distinct from a launch-ready financial product.
+The tax rules still await independent official HMRC source review. Keep preview labels and robots restrictions. All five calculator previews and the Advanced workspace are implemented. Shopify checkout remains disabled until its new migration, server credentials and live integration checks are complete; see docs/SHOPIFY.md. The privacy, contact and operator details need review before a general public launch. Hosting a preview is distinct from a launch-ready financial product.

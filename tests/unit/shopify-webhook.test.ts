@@ -1,0 +1,23 @@
+import { createHmac } from 'node:crypto';
+import { beforeEach,describe,it,expect,vi } from 'vitest';
+const state=vi.hoisted(()=>({ready:true,error:false,calls:[] as unknown[]}));
+vi.mock('server-only',()=>({}));
+vi.mock('@/lib/shopify/config',()=>({shopifyConfig:()=>({store:'blackwoodpublishing.myshopify.com',secret:'fixture-signing-secret',variant:'404',ready:state.ready,allowTest:false})}));
+vi.mock('@/lib/supabase/admin',()=>({createAdmin:()=>({rpc:async(name:string,args:unknown)=>{state.calls.push([name,args]);return {error:state.error?{message:'unavailable'}:null};}})}));
+import { POST } from '../../src/app/api/billing/shopify/webhook/route';
+const order={id:101,financial_status:'paid',currency:'GBP',updated_at:'2026-11-01T12:00:00Z',customer:{id:202},note_attributes:[{name:'mbc_checkout',value:'a'.repeat(64)}],line_items:[{id:303,variant_id:404,quantity:1,price:'1.99'}]};
+function request(payload:unknown=order,topic='orders/paid',signature?:string,shop='blackwoodpublishing.myshopify.com'){
+ const body=JSON.stringify(payload);const hmac=signature??createHmac('sha256','fixture-signing-secret').update(body).digest('base64');
+ return new Request('https://app.test/api/billing/shopify/webhook',{method:'POST',headers:{'x-shopify-hmac-sha256':hmac,'x-shopify-shop-domain':shop,'x-shopify-topic':topic,'x-shopify-webhook-id':'fixture-event'},body});
+}
+beforeEach(()=>{state.ready=true;state.error=false;state.calls=[];vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY','fixture-admin-config');});
+describe('Shopify webhook route',()=>{
+ it('rejects forged signatures and another shop',async()=>{expect((await POST(request(order,'orders/paid','invalid'))).status).toBe(401);expect((await POST(request(order,'orders/paid',undefined,'other.myshopify.com'))).status).toBe(401);expect(state.calls).toEqual([]);});
+ it('grants only after signature and membership validation',async()=>{expect((await POST(request())).status).toBe(200);expect(state.calls[0]).toEqual(['apply_shopify_membership_payment',expect.objectContaining({p_order:'101',p_customer:'202',p_variant:'404',p_period_end:'2026-12-01T12:00:00.000Z'})]);});
+ it('acknowledges unrelated book orders without granting access',async()=>{expect((await POST(request({...order,line_items:[{...order.line_items[0],variant_id:999}]}))).status).toBe(200);expect(state.calls).toEqual([]);});
+ it('acknowledges unrelated books even while membership checkout is disabled',async()=>{state.ready=false;expect((await POST(request({...order,line_items:[{...order.line_items[0],variant_id:999}]}))).status).toBe(200);expect(state.calls).toEqual([]);});
+ it('does not grant when the product has not been confirmed for recurring billing',async()=>{state.ready=false;expect((await POST(request())).status).toBe(503);expect(state.calls).toEqual([]);});
+ it('retries when the database cannot atomically record the paid order',async()=>{state.error=true;expect((await POST(request())).status).toBe(503);});
+ it('records refund line identities instead of revoking an unrelated product',async()=>{expect((await POST(request({order_id:101,refund_line_items:[{line_item_id:303,quantity:1}]},'refunds/create'))).status).toBe(200);expect(state.calls[0]).toEqual(['reverse_shopify_membership_payment',expect.objectContaining({p_lines:['303'],p_complete:false})]);});
+ it('revokes an order cancellation using the signed order identity',async()=>{expect((await POST(request({id:101},'orders/cancelled'))).status).toBe(200);expect(state.calls[0]).toEqual(['reverse_shopify_membership_payment',expect.objectContaining({p_order:'101',p_complete:true})]);});
+});

@@ -1,6 +1,6 @@
 # My Business Checker
 
-A Next.js App Router + TypeScript foundation for clear UK small-business calculators and guides. Core tools are free; Advanced is planned at **£1.99/month**.
+An installable Next.js/TypeScript app for UK small-business estimates. Core tools are free; Advanced is £1.99/month with Shopify recurring billing when configured.
 
 ## Development
 
@@ -9,11 +9,11 @@ Node.js 24 recommended (minimum 22).
 ```sh
 npm ci
 cp .env.example .env.local
-# Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local or environment settings.
+# Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY for accounts.
 npm run dev
 ```
 
-The public site runs without Supabase credentials. Accounts require a publishable key, configured auth redirects, and the database migration. See [Supabase setup](docs/SUPABASE.md).
+The calculators run locally without an account. Email sign-in uses the configured Supabase project. See [Supabase setup](docs/SUPABASE.md), [deployment](docs/DEPLOYMENT.md) and [Shopify billing](docs/SHOPIFY.md).
 
 ```sh
 npm run lint
@@ -21,29 +21,41 @@ npm run typecheck
 npm test
 npm run build
 npx playwright install chromium
-npx playwright test
+npm run test:e2e
+# Or use preinstalled Chromium:
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 ```
+
+## Implemented tools — development previews
+
+- **Self-employed tax:** separate 2025/26 and 2026/27 rules for England, Wales, Northern Ireland and Scotland; profit, marginal business Income Tax, Class 4 NI, take-home and a monthly set-aside. Net relief-at-source pensions, one undergraduate student loan plus postgraduate loan, prior repayments and a separate Self Assessment/payments-on-account cash estimate are supported within the displayed assumptions.
+- **VAT:** twelve monthly taxable-turnover entries and a separate next-30-days-alone test. It does not establish the first date of a historic breach or cover every exception.
+- **MTD:** reference-year gross self-employment/property income, scheduled thresholds, exemption uncertainty and existing obligations.
+- **Salary/dividends:** same company-budget comparison including employer NI, annual director employee NI, Corporation Tax/marginal relief, associated-company thresholds, personal tax and dividends. Employment Allowance requires explicit eligibility confirmation.
+- **Mileage:** defaults to 2026/27 at 55p for the first 10,000 miles then 25p; preserves 2025/26 at 45p/25p. An expense estimate, not a tax saving.
+
+Scottish and mileage rate tables match the primary-source extracts supplied by the owner. Newly added rules retain draft/source-review labels. Tests verify the drafted calculations and boundaries, not independent current HMRC validation. Pensions exclude MPAA, annual-allowance taper/carry-forward and salary sacrifice; loans exclude remaining-balance caps and multiple undergraduate plans. Read each result's assumptions.
+
+## Advanced workspace
+
+Active subscribers can explicitly save named financial inputs/results, reopen snapshots, compare two saved calculations from the same tool across years and download CSV or self-contained HTML reports (printable to PDF). The save API recalculates on the server; it never trusts a browser total. RLS and server checks restrict each user's data and paid writes. Expired users can still read/export/delete their own records. No ordinary calculation is automatically stored.
+
+## Shopify integration status
+
+The owner selected `blackwoodpublishing.myshopify.com` and supplied product/plan JSON. Default membership variant `60314386301273`, selling plan `697055314265`, price £1.99 monthly.
+
+The checkout adapter, raw-body HMAC verification, atomic paid-order ledger, duplicate suppression, renewal mapping, expiry and refund/cancellation reversal are implemented and locally tested. Checkout is **disabled** until server credentials, the billing migration, subscription-only/tax settings and real Shopify webhook/order tests are complete. Source pushes do not establish a working paid subscription. See [required setup and limits](docs/SHOPIFY.md). No Stripe integration is used.
 
 ## Structure
 
-- `src/app/`: homepage, tools, guides, pricing, account, email authentication, informational pages and health endpoint.
-- `src/components/`: shared tool finder and client-side calculator preview.
-- `src/lib/calculators/`: pure engines with explicit rule snapshots; no database dependency.
-- `src/lib/supabase/`: browser and server clients. `src/proxy.ts` refreshes account/auth session cookies.
-- `src/content/`: tool catalogue and supporting draft guides.
-- `supabase/migrations/`: account, subscription, saved-calculation and immutable rule-set schema with row-level security.
-- `tests/`: calculation boundaries, tax/NI fixtures, entitlement checks, PostgreSQL RLS and browser journeys.
+- `src/app/`: public tools/guides/pricing, account/saved/compare pages, auth, owned-record APIs and Shopify checkout/webhook routes.
+- `src/lib/calculators/`, `src/rules/`: pure engines and versioned rules.
+- `src/lib/reports/`: reproducible metrics, safe HTML/CSV export.
+- `src/lib/shopify/`, `src/lib/supabase/`: server billing, trusted checkout linking, browser/server clients.
+- `supabase/migrations/`: original account/RLS schema and the new private Shopify billing migration.
+- `public/sw.js`: only the static offline screen is cached; no account pages, financial inputs or tax rules.
+- `tests/`: calculator boundaries, real embedded-PostgreSQL RLS/ledger tests, API/signature checks and browser journeys.
 
-## Installable app
+The installable app needs HTTPS hosting and real-phone testing. GitHub Actions runs checks; Vercel deployment is separate. Keep preview labels and crawler restrictions until official rule review and operator/privacy/contact details are completed. Accounts/payments are never fabricated for tests.
 
-The app includes a web manifest, phone icons, standalone mode, installation guidance and a static offline screen. It must be hosted over HTTPS for phone installation. Offline support does not store financial inputs, account pages or tax rules. An already open calculator can continue calculating locally. See [deployment instructions](docs/DEPLOYMENT.md).
-
-## Implemented versus planned
-
-The responsive app structure, five tool routes, five introductory guides, pricing, email-link auth code, account shell and Supabase schema are implemented. The mileage preview defaults to **2026/27** (55p for the first 10,000 miles, then 25p, based on supplied HMRC guidance) and retains **2025/26** (45p, then 25p). Both rate tables match the supplied HMRC extract updated 21 May 2026. The tool remains a preview; live-page retrieval is not claimed. The self-employed tax preview calculates business profit, incremental Income Tax, Class 4 NI, take-home and a monthly set-aside for England, Wales, Northern Ireland and Scotland using separate draft 2025/26 and 2026/27 snapshots. Scottish starter, basic, intermediate, higher, advanced and top bands match the supplied GOV.UK extract; Class 4 NI stays UK-wide. The Scottish band tables were reviewed against the user-supplied GOV.UK text on 1 November 2026; remaining UK-wide rule review is pending. The exclusions shown in the interface remain unsupported. The other three calculators show development notices until their engines are ready. Guides/legal copy also require publication review. No tracking scripts or financial-input persistence are enabled.
-
-Subscription checkout, billing webhooks, saved calculations, report exports, scenario comparisons, Google sign-in and HMRC integration are future work. The app does not collect payments. The project URL is configured, but live Supabase authentication and schema access must be verified after setup.
-
-The preview disallows search-engine crawling via `robots.ts`. Update robots, production origin, legal/operator details, reviewed rules and official sources before launch. A GitHub Actions workflow checks lint, types, tests, build and browser journeys. No deployment or environment publication is automated.
-
-Use the existing checkout in each isolated cloud task; no additional Git worktree is needed. Run `npm run dev` for development or `npm run build` followed by `npm run start` for production-mode validation. Live servers must be restarted in future tasks.
+Use the existing checkout in each isolated cloud task; no extra Git worktree is needed. Processes must restart in future tasks. Start with `npm run dev` or build and run `npm run start` for production-mode checks.

@@ -1,20 +1,32 @@
-# Connect the existing Supabase project
+# Supabase accounts and Advanced data
 
-Project URL: https://rreneammvssheldpgrxg.supabase.co
+Project: https://rreneammvssheldpgrxg.supabase.co
 
-1. In Supabase Project Settings → API Keys, copy the **publishable** key (or legacy anon key). Never put a secret/service-role key in a NEXT_PUBLIC variable.
-2. Copy `.env.example` to the ignored `.env.local`. Set `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Set `NEXT_PUBLIC_SITE_URL` to the actual app origin (localhost:3000 for local development). Restart the app after changing public variables; production builds embed them.
-3. Review and apply `supabase/migrations/202611010001_initial_schema.sql` using the Supabase SQL editor or the migration CLI. This creates new public tables; inspect existing tables for conflicts first. The migration is transactional and runs once.
-4. In Authentication → URL Configuration, set Site URL and allow the exact `/auth/callback` URL for each development/production origin. Enable email sign-in. Keep Supabase email rate limits and configure production SMTP before public launch.
-5. Request a link at `/sign-in`, open it in the same browser (PKCE), then confirm `/account` shows the Free plan. Test sign-out. This is the connection/auth smoke test; `/api/health` reports configuration presence only and does not verify database connectivity.
-6. Test row-level security with two different users: neither can read the other's data; neither can modify subscriptions. A Free user cannot insert/update saved calculations. An expired Advanced user may still read/delete their own records. Test these against your Supabase instance before release.
+## Configuration
 
-No migration has been applied remotely by generating these files. No privileged credential is needed in the Next.js app for the current workflow. Configure environment network access to `rreneammvssheldpgrxg.supabase.co` if requests are denied by the cloud policy.
+- `NEXT_PUBLIC_SUPABASE_URL`: the project URL above.
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: public publishable key (or legacy anon key).
+- `NEXT_PUBLIC_SITE_URL`: the app's exact origin: `http://localhost:3000` for local development, `https://my-business-checker.vercel.app` for production.
 
-## Advanced and billing
+Use `.env.local` locally or Vercel environment settings in production. Public variables are embedded at build time, so redeploy after changes. Never put a secret/service-role key in any `NEXT_PUBLIC_` variable.
 
-The £1.99/month price is represented on the pricing page, but checkout, billing webhooks, saved-calculation UI, comparisons and reports are not implemented. The schema reserves subscription writes for a trusted backend. Never grant subscription writes to authenticated users or infer paid access from browser state. Add a verified, idempotent billing webhook before enabling paid features.
+In Authentication → URL Configuration, Site URL is the origin **without** `/auth/callback`; allow that origin plus `/auth/callback` in Redirect URLs. Email sign-in uses PKCE: request and open the email link in the same browser. `/api/health` reports configuration presence, not live connectivity. Google OAuth is not implemented.
 
-## Google sign-in later
+## Migrations
 
-Email links are the initial sign-in flow. To add Google, configure the Google OAuth client and provider in Supabase, use the Supabase-provided callback URL in Google Cloud, and implement `signInWithOAuth` with the app `/auth/callback` redirect. Do not put a Google client secret in frontend code.
+1. `202611010001_initial_schema.sql`: original profiles, subscriptions, saved calculations, rule sets and RLS. The owner confirmed applying this earlier. Do not rerun it on that project.
+2. **New:** `202611010002_shopify_membership.sql`: private checkout links/customer mapping/paid-order ledger, reversal tombstones, size limits and service-role-only atomic billing functions. Apply once after the original migration. This file has only been run in local PostgreSQL tests; generating it does not apply it to production.
+
+Both migrations are transactional. Inspect for naming conflicts before using them on a different existing project. Billing functions use a per-order transaction lock to serialize concurrent payments/refunds, and a user lock for the paid-period update. Function execution is denied to anonymous and authenticated clients.
+
+## Data permissions
+
+Anonymous visitors cannot read or write account/billing tables. Authenticated users can read their own subscription status but cannot grant themselves paid access. Active Advanced users can save/update their own records; expired users can still read/export/delete their existing records. Normal APIs use the user's authenticated Supabase session and explicitly filter by user ID, in addition to RLS.
+
+The server recalculates a save from validated inputs; it does not trust a browser-provided result. Reports preserve a saved snapshot and its rule version. HTML escapes user text; CSV exports neutralize formula-like cells. Financial figures are sent to the app/Supabase only after explicit save consent, not while calculating.
+
+## Billing credentials and live checks
+
+`SUPABASE_SERVICE_ROLE_KEY` is server-only and is needed only for Shopify checkout linking and signed billing events. Enter it securely in Vercel; do not paste it into chat or commit it. See [Shopify setup](SHOPIFY.md) for the matching webhook/Storefront configuration.
+
+Local tests verify RLS with two users, signature rejection, paid-order idempotency, refunds before payments and owned report APIs. The full paid-user browser journey still needs a real Shopify test order and live Supabase account. Configure production email delivery and complete the operator/privacy/retention details before a general launch.

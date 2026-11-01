@@ -20,7 +20,7 @@ for(const year of ['2025/26','2026/27'] as const){
   it('shows six Scottish bands and the regional example result',()=>{
    const result=calculateSelfEmployed(input,rules);
    expect(result.incomeTax.bands.map(band=>band.label)).toEqual(['Starter rate','Basic rate','Intermediate rate','Higher rate','Advanced rate','Top rate']);
-   expect(result).toMatchObject({businessIncomeTaxPence:fixture.tax,class4Pence:241660,businessTaxPence:fixture.tax+241660,takeHomePence:fixture.net,region:'scotland',taxYear:year,ruleSetVersion:'draft-2'});
+   expect(result).toMatchObject({businessIncomeTaxPence:fixture.tax,class4Pence:241660,businessTaxPence:fixture.tax+241660,takeHomePence:fixture.net,region:'scotland',taxYear:year,ruleSetVersion:'draft-3'});
    expect(rules.scottishSourceReview).toBe('provided-hmrc-extract');
   });
   it('uses the UK-wide NI rates for Scotland',()=>{
