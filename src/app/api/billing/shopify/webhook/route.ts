@@ -5,16 +5,20 @@ import { createAdmin } from '@/lib/supabase/admin';
 import { shopifyConfig } from '@/lib/shopify/config';
 import { validShopifySignature,membershipOrder,MembershipOrderError,refundSchema,cancelledOrderSchema } from '@/lib/shopify/core';
 export const runtime='nodejs';
-function failure(code:string,status:number){
+function failure(code:string,status:number,details?:{expectedShop:string;receivedShop:string}){
  // Codes only: never log webhook bodies, signatures, tokens, customer details or provider messages.
- console.error(JSON.stringify({event:'shopify_membership_webhook',code,status}));
+ console.error(JSON.stringify({event:'shopify_membership_webhook',code,status,...details}));
  return NextResponse.json({error:`Membership webhook failed [${code}]. No new access was granted.`},{status});
 }
 export async function POST(request:Request){
  const config=shopifyConfig();if(!config.secret||!config.variant||!process.env.SUPABASE_SERVICE_ROLE_KEY)return failure('WH_CONFIG',503);
  const raw=await request.text();if(Buffer.byteLength(raw,'utf8')>512*1024)return failure('WH_PAYLOAD_SIZE',413);
- if(request.headers.get('x-shopify-shop-domain')!==config.store)return failure('WH_SHOP',401);
  if(!validShopifySignature(raw,request.headers.get('x-shopify-hmac-sha256'),config.secret))return failure('WH_SIGNATURE',401);
+ // Diagnose domain aliases only for signature-verified requests, and log domain-shaped values only.
+ const expectedShop=config.webhookShop??config.store;
+ const receivedShop=request.headers.get('x-shopify-shop-domain')?.trim().toLowerCase()??'';
+ if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(expectedShop))return failure('WH_CONFIG',503);
+ if(receivedShop!==expectedShop)return failure('WH_SHOP',401,{expectedShop,receivedShop:/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(receivedShop)?receivedShop:'missing-or-invalid'});
  const topic=request.headers.get('x-shopify-topic');if(!['orders/paid','refunds/create','orders/cancelled'].includes(topic??'')){console.info(JSON.stringify({event:'shopify_membership_webhook',code:'WH_TOPIC_IGNORED'}));return NextResponse.json({ignored:true});}
  try{
   const payload=JSON.parse(raw);const admin=createAdmin();

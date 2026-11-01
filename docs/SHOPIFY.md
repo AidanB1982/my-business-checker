@@ -104,3 +104,9 @@ Webhook requests now emit a fixed `shopify_membership_webhook` diagnostic in Ver
 - `WH_RECEIVED`: the signed event was processed/acknowledged. Duplicate orders are idempotent; refunded periods remain revoked.
 
 After correcting the cause, retry/resend the **original paid-order delivery** using Shopify's available delivery controls, or wait for its retry when applicable. A generic Send test notification uses a sample order and cannot activate the real customer's membership. Confirm the matching ledger row and subscription before testing return navigation. Historic delivery recovery must not create a fresh paid date or bypass the original account-link validation.
+
+### Shop-domain mismatch
+
+`WH_SHOP` means the webhook's `X-Shopify-Shop-Domain` differs from the expected permanent domain. Public storefront/API aliases can differ from the permanent Shopify identity. Verify the exact permanent `*.myshopify.com` name in Settings → Domains. Set optional Production `SHOPIFY_WEBHOOK_SHOP_DOMAIN` to that hostname only (no scheme, path or wildcard), then redeploy. The API host and existing database `shop_domain` ledger identity stay unchanged, preserving renewal/refund mappings. Do not whitelist a sample or unrelated store just to pass a test.
+
+Signature verification now runs before shop-domain diagnostics. For a signature-verified request only, `WH_SHOP` logs include `expectedShop` and `receivedShop`; only strictly domain-shaped values are recorded, otherwise `missing-or-invalid`. Invalid signatures still record no header values. No mismatch grants access. If no header is present, investigate the delivery mechanism rather than bypassing the check. A sample webhook can verify signature/domain handling but is not evidence that a real payment was applied.

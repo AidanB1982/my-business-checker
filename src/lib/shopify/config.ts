@@ -3,7 +3,7 @@ export const SHOPIFY_STORE='blackwoodpublishing.myshopify.com';
 export const SHOPIFY_ACCOUNT_URL=`https://${SHOPIFY_STORE}/account`;
 const value=(name:string)=>process.env[name]?.trim()||undefined;
 export function shopifyConfig(){return {
- store:SHOPIFY_STORE,token:value('SHOPIFY_STOREFRONT_ACCESS_TOKEN'),
+ store:SHOPIFY_STORE,webhookShop:value('SHOPIFY_WEBHOOK_SHOP_DOMAIN')?.toLowerCase()??SHOPIFY_STORE,token:value('SHOPIFY_STOREFRONT_ACCESS_TOKEN'),
  clientId:value('SHOPIFY_CLIENT_ID'),clientSecret:value('SHOPIFY_CLIENT_SECRET'),
  secret:value('SHOPIFY_WEBHOOK_SECRET'),
  variant:value('SHOPIFY_MEMBERSHIP_VARIANT_ID')??'60314386301273',
@@ -13,6 +13,7 @@ export function shopifyConfig(){return {
 };}
 export function shopifyConfigurationIssues(){
  const config=shopifyConfig();const issues:{setting:string;reason:string}[]=[];
+ if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(config.webhookShop))issues.push({setting:'SHOPIFY_WEBHOOK_SHOP_DOMAIN',reason:'Must be an exact myshopify.com domain without a scheme or path.'});
  if(!config.ready)issues.push({setting:'SHOPIFY_SUBSCRIPTION_READY',reason:'Must be set to true after setup.'});
  if(!config.token){
   if(!config.clientId)issues.push({setting:'SHOPIFY_CLIENT_ID',reason:'Missing or blank. Required unless an explicit Storefront token is configured.'});
