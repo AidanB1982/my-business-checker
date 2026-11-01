@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { tools } from "@/content/tools";
 import { Icon,toolIcon } from './ui-icon';
-const filters=['All tools','Tax','VAT','Expenses','Planning'] as const;
+const filters=['All tools','Tax','VAT','Expenses','Planning','Property','Records'] as const;
 export function ToolFinder(){
  const [search,setSearch]=useState(''),[category,setCategory]=useState('All tools');
  const filtered=tools.filter(tool=>(category==='All tools'||tool.category===category)&&`${tool.name} ${tool.description} ${tool.category}`.toLowerCase().includes(search.toLowerCase()));

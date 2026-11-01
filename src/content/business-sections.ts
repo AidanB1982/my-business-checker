@@ -1,0 +1,5 @@
+export const businessSections={
+ 'sole-traders':{name:'Sole traders',title:'A clearer month. A stronger business.',summary:'Bring your income, costs and next steps into focus. Practical working areas and short lessons, shaped around Blackwood Publishing’s sole-trader resources.',icon:'wallet' as const,steps:['Record what came in','Separate costs and drawings','Review the month','Keep a traceable year-end working'],tools:['sole-trader-working-sheet','self-employed-tax-calculator','business-mileage-calculator','vat-threshold-checker'],book:'Accounting for UK Sole Traders'},
+ landlords:{name:'Landlords',title:'Know your properties. Plan what comes next.',summary:'Follow the rent, reconcile the agent and prepare for the work ahead. Property working areas and practical reading adapted from Blackwood Publishing’s landlord resources.',icon:'file' as const,steps:['Track gross rent and arrears','Reconcile agent funds','Plan repairs and replacements','Prepare a clear handover'],tools:['landlord-rent-reconciliation','property-maintenance-reserve','mtd-checker'],book:'Accounting for UK Landlords'},
+} as const;
+export type BusinessAudience=keyof typeof businessSections;

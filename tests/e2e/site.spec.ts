@@ -231,7 +231,7 @@ test('tool catalogue filters categories and combines them with search',async({pa
  await expect(page.getByRole('button',{name:'Planning',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('searchbox').fill('pension');await expect(page.locator('.tool-card')).toHaveCount(1);
  await page.getByRole('button',{name:'Expenses',exact:true}).click();await expect(page.getByRole('heading',{name:'No tools found'})).toBeVisible();
- await page.getByRole('button',{name:'Show all tools'}).click();await expect(page.locator('.tool-card')).toHaveCount(7);
+ await page.getByRole('button',{name:'Show all tools'}).click();await expect(page.locator('.tool-card')).toHaveCount(10);
 });
 test('redesigned pages keep navigation and content within a narrow mobile viewport',async({page})=>{
  await page.setViewportSize({width:375,height:812});
@@ -240,4 +240,35 @@ test('redesigned pages keep navigation and content within a narrow mobile viewpo
   await expect(page.getByRole('link',{name:'My workspace',exact:true})).toBeVisible();
  }
  await page.goto('/tools');await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Tools',exact:true})).toHaveAttribute('aria-current','page');
+});
+
+test('native sole-trader section leads to an editable working with separated drawings',async({page})=>{
+ await page.goto('/sole-traders');await expect(page.getByRole('heading',{level:1})).toContainText('A clearer month');
+ expect(await page.locator('a[href$=".xlsx"],a[href$=".docx"]').count()).toBe(0);
+ await page.getByRole('link',{name:/Sole trader monthly working/}).click();
+ await page.getByLabel('Business income received (£)').fill('3000');await page.getByLabel('Owner drawings paid (£)').fill('500');
+ await page.getByLabel('Expense description').nth(0).fill('Materials');await page.getByLabel('Amount paid (£)').nth(0).fill('300');
+ await page.getByLabel('Expense description').nth(1).fill('Phone');await page.getByLabel('Amount paid (£)').nth(1).fill('60');await page.getByLabel('Business use (%)').nth(1).fill('50');
+ await page.getByRole('button',{name:'Review my monthly working'}).click();await expect(page.locator('.result h2')).toHaveText('£2,670.00');
+ await expect(page.locator('.result .metric-row').filter({hasText:'Period cash movement after all entered costs, drawings and planned reserve'}).getByRole('definition')).toHaveText('£1,472.50');
+ await page.getByLabel('Owner drawings paid (£)').fill('600');await expect(page.locator('.result h2')).not.toHaveText('£2,670.00');
+});
+test('landlord rent working retains arrears separately from advance rent',async({page})=>{
+ await page.goto('/tools/landlord-rent-reconciliation');
+ for(const [label,value] of [['Opening rent arrears (£)','200'],['Rent due for this month (£)','1000'],['Rent received against this month and older arrears (£)','900'],['Rent received for future periods (£)','300'],['Opening funds held by agent (£)','100'],['Agent fees deducted (£)','120'],['Other costs paid by agent (£)','80'],['Agent remittances to landlord (£)','1000'],['Actual closing funds held by agent (£)','100']])await page.getByLabel(label,{exact:true}).fill(value);
+ await page.getByRole('button',{name:'Reconcile my rent'}).click();await expect(page.locator('.result h2')).toHaveText('£300.00');
+ await expect(page.locator('.result .metric-row').filter({hasText:'Unexplained difference: expected minus statement'}).getByRole('definition')).toHaveText('£0.00');
+});
+test('property reserve shows immediate shortfalls on mobile',async({page})=>{
+ await page.setViewportSize({width:375,height:812});await page.goto('/tools/property-maintenance-reserve');
+ await page.getByLabel('Planning horizon').selectOption('5');await page.getByLabel('Annual cost inflation (%)').fill('0');await page.getByLabel('Cost contingency (%)').fill('0');
+ await page.getByRole('button',{name:'Remove component 2'}).click();await page.getByLabel('Current replacement cost (£)').fill('4000');await page.getByLabel('First due calendar year').fill('2026');await page.getByLabel('Repeat every years (0 = once)').fill('0');
+ await page.getByRole('button',{name:'Build my reserve plan'}).click();
+ await expect(page.locator('.result .metric-row').filter({hasText:'Immediate extra funding needed for first-year work'}).getByRole('definition')).toHaveText('£3,000.00');
+ await expect(page.getByRole('heading',{name:'Year-by-year funding'})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+test('native reading is discoverable and Advanced lesson bodies stay protected',async({page})=>{
+ await page.goto('/landlords');await page.getByRole('link',{name:/Gross rent and agent statements/}).click();await page.getByText('Show the working and explanation',{exact:true}).click();await expect(page.getByText(/Gross rent collected is £1,200/)).toBeVisible();
+ await page.goto('/learn/sole-trader-bank-review');await expect(page.getByRole('heading',{name:'A little deeper with Advanced.'})).toBeVisible();expect(await page.content()).not.toContain('Use the closing statement balance and the bookkeeping balance for the same account and date.');
+ for(const path of ['/sole-traders','/landlords','/learn/profit-cash-and-drawings']){await page.setViewportSize({width:375,height:812});await page.goto(path);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),path).toBe(true);}
 });

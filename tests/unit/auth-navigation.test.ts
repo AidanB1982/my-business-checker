@@ -11,13 +11,14 @@ import { signIn } from '../../src/app/auth/actions';
 import { GET } from '../../src/app/auth/callback/route';
 beforeEach(()=>{state.returnTo='/pricing';state.setCalls=[];state.deleted=false;state.otp=null;state.error=false;});
 describe('pricing sign-in continuation',()=>{
- it.each(['https://evil.test','//evil.test','/pricing?next=evil','/admin',undefined])('does not accept untrusted redirect %s',value=>{expect(authReturnPath(value)).toBe('/account');});
+ it.each(['https://evil.test','//evil.test','/pricing?next=evil','/admin','/learn/../admin','/learn/%2f%2fevil','/learn/example?next=evil','/learn/\\evil',undefined])('does not accept untrusted redirect %s',value=>{expect(authReturnPath(value)).toBe('/account');});
  it('records a safe pricing return without changing the allowed Supabase callback URL',async()=>{
   const form=new FormData();form.set('email','fixture@example.test');form.set('returnTo','/pricing');
   await expect(signIn(form)).rejects.toThrow('status=sent&next=%2Fpricing');
   expect(state.setCalls[0]).toEqual([AUTH_RETURN_COOKIE,'/pricing',expect.objectContaining({httpOnly:true,secure:true,sameSite:'lax',path:'/'})]);
   expect(state.otp).toMatchObject({options:{emailRedirectTo:'https://app.test/auth/callback'}});
  });
+ it('preserves an internal lesson destination through sign-in',async()=>{state.returnTo='/learn/sole-trader-bank-review';const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));expect(response.headers.get('location')).toBe('https://app.test/learn/sole-trader-bank-review');});
  it('returns a successful email sign-in directly to pricing',async()=>{
   const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));
   expect(response.headers.get('location')).toBe('https://app.test/pricing');expect(state.deleted).toBe(true);

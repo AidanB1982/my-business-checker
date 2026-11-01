@@ -1,0 +1,21 @@
+import { beforeEach,describe,it,expect,vi } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+const state=vi.hoisted(()=>({configured:true,user:false,error:false,status:'active',end:'2099-01-01T00:00:00Z'}));
+vi.mock('server-only',()=>({}));
+vi.mock('next/navigation',()=>({notFound:()=>{throw new Error('not found');}}));
+vi.mock('@/lib/config',()=>({isSupabaseConfigured:()=>state.configured}));
+vi.mock('@/lib/supabase/server',()=>({createClient:async()=>({auth:{getUser:async()=>({data:{user:state.user?{id:'fixture-user'}:null}})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{status:state.status,current_period_end:state.end},error:state.error?{message:'private database error'}:null})})})})})}));
+import Lesson from '../../src/app/learn/[slug]/page';
+const html=async(slug='sole-trader-bank-review')=>renderToStaticMarkup(await Lesson({params:Promise.resolve({slug})}));
+beforeEach(()=>{state.configured=true;state.user=false;state.error=false;state.status='active';state.end='2099-01-01T00:00:00Z';});
+const protectedText='Use the closing statement balance and the bookkeeping balance for the same account and date.';
+describe('server-side Advanced reading access',()=>{
+ it('keeps free lessons available without an account',async()=>{const result=await html('profit-cash-and-drawings');expect(result).toContain('A useful monthly working separates money received');expect(result).not.toContain('A little deeper with Advanced.');});
+ it('returns only the preview and access panel for an anonymous premium lesson',async()=>{const result=await html();expect(result).toContain('A little deeper with Advanced.');expect(result).not.toContain(protectedText);expect(result).not.toContain('A small worked example');});
+ it('renders the working and lesson only with a confirmed active paid period',async()=>{state.user=true;expect(await html()).toContain(protectedText);});
+ it.each(['canceled','unpaid'])('rejects a non-active subscription (%s)',async status=>{state.user=true;state.status=status;expect(await html()).not.toContain(protectedText);});
+ it('rejects expired active subscriptions',async()=>{state.user=true;state.end='2000-01-01T00:00:00Z';expect(await html()).not.toContain(protectedText);});
+ it('fails closed without exposing database messages',async()=>{state.user=true;state.error=true;const result=await html();expect(result).toContain('Your reading access could not be checked.');expect(result).not.toContain(protectedText);expect(result).not.toContain('private database error');});
+ it('does not render protected material when accounts are unconfigured',async()=>{state.configured=false;expect(await html()).not.toContain(protectedText);});
+ it('returns not found for an unknown lesson',async()=>{await expect(html('unknown')).rejects.toThrow('not found');});
+});

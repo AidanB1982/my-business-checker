@@ -6,5 +6,8 @@ export const tools = [
   { slug: "business-mileage-calculator", name: "Business mileage", category: "Expenses", description: "Estimate an allowance for qualifying business journeys.", guide: "business-mileage", status: "Preview" },
   { slug: "salary-take-home-calculator", name: "Salary take-home", category: "Tax", description: "Check your salary after tax, student loans and pension deductions.", guide: "salary-take-home", status: "Preview" },
   { slug: "pension-pot-predictor", name: "Pension pot predictor", category: "Planning", description: "Project your pension from current salary and contribution percentages.", guide: "pension-planning", status: "Preview" },
+  { slug: "sole-trader-working-sheet", name: "Sole trader monthly working", category: "Records", description: "Separate receipts, costs, drawings and your planned reserve.", guide: "sole-trader-working", status: "Preview" },
+  { slug: "landlord-rent-reconciliation", name: "Landlord rent reconciliation", category: "Property", description: "Track arrears and advance rent, and reconcile your agent statement.", guide: "landlord-rent-records", status: "Preview" },
+  { slug: "property-maintenance-reserve", name: "Property maintenance reserve", category: "Property", description: "Plan component replacements and see when your reserve needs funding.", guide: "property-maintenance-planning", status: "Preview" },
 ] as const;
-export const categories = ["Tax", "VAT", "Expenses", "Planning", "Property"] as const;
+export const categories = ["Tax", "VAT", "Expenses", "Planning", "Property", "Records"] as const;

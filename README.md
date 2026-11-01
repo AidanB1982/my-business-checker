@@ -38,6 +38,12 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 
 Scottish and mileage rate tables match the primary-source extracts supplied by the owner. Newly added rules retain draft/source-review labels. Tests verify the drafted calculations and boundaries, not independent current HMRC validation. Pensions exclude MPAA, annual-allowance taper/carry-forward and salary sacrifice; loans exclude remaining-balance caps and multiple undergraduate plans. Read each result's assumptions.
 
+## Native sole-trader and landlord sections
+
+`/sole-traders` and `/landlords` adapt the supplied Blackwood Publishing books/workbooks into native working areas and nine lessons (four free, five Advanced). No original DOCX/XLSX files are distributed. `/learn/[slug]` checks premium access on the server and preserves a safe lesson destination through email sign-in.
+
+Three additional free working areas bring the catalogue to ten: sole-trader monthly working, landlord rent/agent reconciliation, and property maintenance reserve planning. Advanced users can save canonical snapshots, compare matching tools and export the existing reports. These are focused workings, not complete bookkeeping ledgers, rental-tax engines or compliance certification. See [native section scope](docs/NATIVE-SECTIONS.md).
+
 ## Advanced workspace
 
 Active subscribers can explicitly save named financial inputs/results, reopen snapshots, compare two saved calculations from the same tool across years and download CSV or self-contained HTML reports (printable to PDF). The save API recalculates on the server; it never trusts a browser total. RLS and server checks restrict each user's data and paid writes. Expired users can still read/export/delete their own records. No ordinary calculation is automatically stored.

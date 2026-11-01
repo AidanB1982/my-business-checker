@@ -1,5 +1,6 @@
 "use client";
 import { useEffect,useRef,useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 export function BillingActions({available,advanced,hasHistory=false,returnTo='/account'}:{available:boolean;advanced:boolean;hasHistory?:boolean;returnTo?:'/pricing'|'/account'}){
  const router=useRouter();
@@ -39,5 +40,5 @@ export function BillingActions({available,advanced,hasHistory=false,returnTo='/a
    if(popup.current&&!popup.current.closed)popup.current.location.replace(body.url);
    setCheckoutUrl(body.url);setBusy(false);setMessage('Complete payment in Shopify. This page will open your Advanced account and close the checkout window once payment is confirmed.');
   }catch(error){popup.current?.close();setMessage(error instanceof Error?error.message:'Checkout could not be opened.');setBusy(false);}
- }}>{busy?'Opening Shopify…':checkoutUrl?'Waiting for payment confirmation…':'Subscribe for £1.99/month'}</button>{!available&&<p className="fine">Checkout is being configured. Please try again later.</p>}{message&&<p role="status">{message}</p>}{checkoutUrl&&<p><a href={checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={event=>{event.preventDefault();const opened=window.open('about:blank','_blank');if(opened){popup.current=opened;opened.location.replace(checkoutUrl);}}}>Open Shopify checkout →</a> <a href="/account">Check your account →</a></p>}</>;
+ }}>{busy?'Opening Shopify…':checkoutUrl?'Waiting for payment confirmation…':'Subscribe for £1.99/month'}</button>{!available&&<p className="fine">Checkout is being configured. Please try again later.</p>}{message&&<p role="status">{message}</p>}{checkoutUrl&&<p><a href={checkoutUrl} target="_blank" rel="noopener noreferrer" onClick={event=>{event.preventDefault();const opened=window.open('about:blank','_blank');if(opened){popup.current=opened;opened.location.replace(checkoutUrl);}}}>Open Shopify checkout →</a> <Link href="/account">Check your account →</Link></p>}</>;
 }
