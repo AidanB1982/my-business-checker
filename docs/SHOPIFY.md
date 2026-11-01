@@ -49,3 +49,7 @@ The app does not send unsolicited emails or alter the Shopify theme/product auto
 ## Dev Dashboard credential route
 
 After adding the Client ID/secret as private Vercel variables, redeploy. No OAuth redirect route or extra Supabase migration is needed for this server-to-server exchange. An explicit Storefront token takes precedence if both methods are configured. Server instances coalesce concurrent requests and cache the resolved token for five minutes; later requests query existing tokens before creating one. A cross-instance creation race can create more than one app-owned token, but the helper does not delete or rotate any tokens. The client-credentials exchange and token creation have mocked tests; successful authentication against this store still requires the actual private variables and a live checkout check.
+
+## Diagnosing a disabled checkout button
+
+Open `/api/health` on the deployed app. `billing.configurationIssues` lists missing setting names or a disabled readiness flag, never credential values. `revision` identifies the deployed Git commit when Vercel provides it. If the array is empty but an old tab shows a disabled button, refresh the account page and verify the production deployment/revision. A configured result verifies only presence/format, not the credentials, webhook delivery or Shopify API access. Check Production scope and redeploy after correcting variables.
