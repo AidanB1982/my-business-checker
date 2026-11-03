@@ -8,7 +8,7 @@ export function BillingActions({available,advanced,hasHistory=false,returnTo='/a
  const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[checkoutUrl,setCheckoutUrl]=useState('');
  useEffect(()=>{
   if(!checkoutUrl)return;
-  let disposed=false,timer:ReturnType<typeof setTimeout>|undefined;
+  let disposed=false,timer:ReturnType<typeof setTimeout>|undefined,reconcileAt=Date.now()+60000;
   const controller=new AbortController();const deadline=Date.now()+20*60*1000;
   async function check(){
    try{
@@ -19,6 +19,7 @@ export function BillingActions({available,advanced,hasHistory=false,returnTo='/a
      if(disposed)return;
      popup.current?.close();setCheckoutUrl('');setBusy(false);router.replace('/account');router.refresh();return;
     }
+    if(response.ok&&Date.now()>=reconcileAt){reconcileAt=Date.now()+60000;const check=await fetch('/api/billing/reconcile',{method:'POST',cache:'no-store',signal:controller.signal}),body=await check.json();if(disposed)return;if(check.ok&&body.advanced===true){popup.current?.close();setCheckoutUrl('');setBusy(false);router.replace('/account');router.refresh();return;}if(!check.ok)setMessage('Payment confirmation is still pending. '+(body.error??'Automatic verification is temporarily unavailable.'));}
    }catch{/* A temporary connection failure must not be treated as payment confirmation. */}
    if(disposed)return;
    if(Date.now()>=deadline){setCheckoutUrl('');setBusy(false);setMessage('Payment confirmation is taking longer than expected. Check your account before starting another subscription.');return;}

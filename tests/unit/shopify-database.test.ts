@@ -12,7 +12,7 @@ async function paid(order:string,customer:string,hash:string|null=null){return d
 async function reverse(order:string,complete=true,lines:string[]=[`line-${order}`]){return db.query('select public.reverse_shopify_membership_payment($1,$2,$3,$4,$5)',[shop,order,`event-${++serial}`,lines,complete]);}
 beforeAll(async()=>{
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;insert into auth.users values('${alice}'),('${bob}');`);
- for(const file of ['202611010001_initial_schema.sql','202611010002_shopify_membership.sql'])await db.exec(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['202611010001_initial_schema.sql','202611010002_shopify_membership.sql','202611030007_membership_autocheck.sql'])await db.exec(await readFile(new URL('../../supabase/migrations/'+file,import.meta.url),'utf8'));
 },20000);
 afterAll(async()=>{await db.close();});
 describe('Shopify SQL paid-period ledger',()=>{
@@ -64,3 +64,5 @@ describe('Shopify SQL paid-period ledger',()=>{
   await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[bob]);expect((await db.query('select * from public.subscriptions')).rows).toHaveLength(0);await admin();
  });
 });
+
+it('serializes automatic membership checks in a private service-only lease',async()=>{await admin();await db.exec('set role authenticated');await expect(db.query('select public.claim_shopify_membership_check($1)',[alice])).rejects.toThrow('permission denied');await admin();await db.exec('set role service_role');expect((await db.query<{claimed:boolean}>('select public.claim_shopify_membership_check($1) claimed',[alice])).rows[0].claimed).toBe(true);expect((await db.query<{claimed:boolean}>('select public.claim_shopify_membership_check($1) claimed',[alice])).rows[0].claimed).toBe(false);await admin();});
