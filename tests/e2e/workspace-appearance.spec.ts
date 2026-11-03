@@ -24,11 +24,13 @@ test('workspace tiles expose relevant sections with usable mobile links',async({
 test('app and graph colours change independently and persist without changing chart figures',async({page})=>{
  await fixture(page);await page.getByText('Colours & graphs',{exact:true}).click();
  const bar=page.locator('.chart-income');const initialBar=await bar.evaluate(e=>getComputedStyle(e).backgroundColor);
- for(const scheme of ['cream','sky','rose']){await page.getByLabel('App colour scheme').selectOption(scheme);await expect(page.locator('html')).toHaveAttribute('data-scheme',scheme);}
- await page.getByLabel('App colour scheme').selectOption('cream');expect(await bar.evaluate(e=>getComputedStyle(e).backgroundColor)).toBe(initialBar);
+ for(const scheme of ['cream','sky','rose','white']){await page.getByLabel('App colour scheme').selectOption(scheme);await expect(page.locator('html')).toHaveAttribute('data-scheme',scheme);}
+ await page.getByLabel('App colour scheme').selectOption('white');expect(await bar.evaluate(e=>getComputedStyle(e).backgroundColor)).toBe(initialBar);
+ expect(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe('rgb(255, 255, 255)');
+ await page.emulateMedia({colorScheme:'dark'});expect(await page.locator('body').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe('rgb(255, 255, 255)');
  await page.getByLabel('Graph colours').selectOption('ocean');expect(await bar.evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(initialBar);await expect(page.getByRole('figure',{name:'Example figures'})).toContainText('£100.00');
  expect(await page.locator('.trend-series-0 polyline').evaluate(e=>getComputedStyle(e).stroke)).toBe(await bar.evaluate(e=>getComputedStyle(e).backgroundColor));
- await page.reload();await expect(page.locator('html')).toHaveAttribute('data-scheme','cream');await expect(page.locator('html')).toHaveAttribute('data-graphs','ocean');
+ await page.reload();await expect(page.locator('html')).toHaveAttribute('data-scheme','white');await expect(page.locator('html')).toHaveAttribute('data-graphs','ocean');
  await page.getByText('Colours & graphs',{exact:true}).click();await page.getByRole('button',{name:'Reset colours'}).click();await expect(page.locator('html')).toHaveAttribute('data-scheme','forest');await expect(page.locator('html')).toHaveAttribute('data-graphs','classic');
 });
 

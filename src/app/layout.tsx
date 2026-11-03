@@ -5,7 +5,7 @@ import type { Viewport, Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { SITE_URL } from "@/lib/config";
-export const viewport: Viewport = { themeColor: "#193c32" };
+export const viewport: Viewport = { themeColor: "#ffffff", colorScheme: "light" };
 export const metadata: Metadata = {
   applicationName: "My Business Checker",
   appleWebApp: { capable: true, title: "Business Checker", statusBarStyle: "default" },
