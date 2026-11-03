@@ -1,4 +1,5 @@
-export const appearanceSchemes = ['forest', 'ocean', 'plum'] as const;
+export const appearanceSchemes = ['forest', 'ocean', 'plum', 'cream', 'sky', 'rose'] as const;
+export const appearanceLabels: Record<typeof appearanceSchemes[number], string> = { forest: 'Forest', ocean: 'Ocean', plum: 'Plum', cream: 'Warm cream', sky: 'Pale sky', rose: 'Soft rose' };
 export const graphPalettes = ['classic', 'ocean', 'violet'] as const;
 export type Appearance = { scheme: typeof appearanceSchemes[number]; graphs: typeof graphPalettes[number] };
 export const appearanceKey = 'mbc-appearance-v1';

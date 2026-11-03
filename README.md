@@ -17,7 +17,7 @@ npm run dev
 
 The calculators run locally without an account. Email/password sign-in, registration and password resets use the configured Supabase project. Existing email-link users can set their first password through Forgot password. See [Supabase setup](docs/SUPABASE.md), [deployment](docs/DEPLOYMENT.md) and [Shopify billing](docs/SHOPIFY.md).
 
-The signed-in `/account` workspace starts with expandable section tiles for sole traders, landlords, projects, bookkeeping, calculators and guides. **Colours & graphs** offers independent app and chart palettes, saved locally on the browser under `mbc-appearance-v1`. Preferences do not sync between devices or affect calculations, invoice branding or PDF exports; no SQL migration is needed.
+The signed-in `/account` workspace starts with expandable section tiles for sole traders, landlords, projects, bookkeeping, calculators and guides. **Colours & graphs** offers Forest, Ocean, Plum, Warm cream, Pale sky and Soft rose app themes with independent chart palettes, saved locally on the browser under `mbc-appearance-v1`. Preferences do not sync between devices or affect calculations, invoice branding or PDF exports; no SQL migration is needed.
 
 Shared **Projects & tasks** are available at `/projects`: workspaces, boards, milestones, deliverables, discussions, weekly workload and team permissions. Owners need Advanced; invited teammates participate under that workspace plan. Apply the new project SQL migration once before use; see [project setup and features](docs/PROJECTS.md).
 
