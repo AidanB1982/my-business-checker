@@ -1,4 +1,6 @@
 "use client";
+import { CalculationCharts } from "./calculation-charts";
+import { buildSnapshot } from "@/lib/reports/calculations";
 import { CalculationActions } from "./calculation-actions";
 import { useState } from "react";
 import { calculateMileage, mileageRuleSets, type MileageTaxYear } from "@/lib/calculators/mileage";
@@ -35,6 +37,7 @@ export function MileageCalculator() {
         </> : <><h2>Let’s work it out.</h2><p>Choose a tax year and enter your business miles to see the breakdown. Your figures stay in your browser.</p></>}
       </section>
     </div>
+    {result&&<CalculationCharts snapshot={buildSnapshot({toolSlug:"business-mileage-calculator",taxYear:year,inputs:{miles:result.firstBandMiles+result.additionalMiles}})}/>}
     {result&&<CalculationActions calculation={{toolSlug:"business-mileage-calculator",taxYear:year,inputs:{miles:result.firstBandMiles+result.additionalMiles}}}/>}
     <section className="notice"><h2>Rates and sources</h2>
       <p><a className="text-link" href="https://www.gov.uk/government/publications/rates-and-allowances-travel-mileage-and-fuel-allowances/travel-mileage-and-fuel-rates-and-allowances">HMRC mileage rates and allowances →</a> (updated 21 May 2026) lists 55p for the first 10,000 business miles in 2026/27 and 25p thereafter. The earlier 2025/26 rate is 45p, then 25p.</p>

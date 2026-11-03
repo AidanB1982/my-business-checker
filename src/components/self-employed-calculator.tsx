@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { CalculationCharts } from "./calculation-charts";
+import { buildSnapshot } from "@/lib/reports/calculations";
 import { CalculationActions } from "./calculation-actions";
 import { calculateSelfEmployed, selfEmployedInput } from "@/lib/calculators/self-employed";
 import { selfEmployedRules, selfEmployedSources, type TaxYear, type TaxRegion } from "@/rules/self-employed";
@@ -61,6 +63,7 @@ export function SelfEmployedCalculator() {
         </> : <><h2>A clearer picture<br/>starts here.</h2><p>Enter your annual figures and calculate to see your tax, National Insurance and business take-home estimate.</p><p>Your result will explain what went into the calculation and what to check next.</p></>}
       </section>
     </div>
+    {result&&<CalculationCharts snapshot={buildSnapshot({toolSlug:"self-employed-tax-calculator",taxYear:year,inputs:result.inputs})}/>}
     {result&&<CalculationActions calculation={{toolSlug:"self-employed-tax-calculator",taxYear:year,inputs:result.inputs}}/>}
     <section className="section"><h2>Important assumptions</h2><ul><li>One sole-trader business using actual allowable expenses. Full-year taxpayer status in the selected region is assumed; residence changes and split-year treatment are not calculated. No trading allowance, capital allowances or loss relief.</li><li>Other income is non-savings income. The estimate does not calculate dividends, savings interest, capital gains or rental-business rules.</li><li>Relief-at-source pensions and a single undergraduate loan plus a postgraduate loan can be estimated. Other pension methods, Gift Aid, Marriage Allowance, Child Benefit charge and unlisted reliefs are excluded.</li><li>Class 4 NI only. No employment NI, voluntary Class 2 NI, annual maximum adjustments or age-transition rules. NI credits and voluntary contributions may still matter.</li><li>Tax deducted and prior payments on account are used only for the separate Self Assessment cash estimate, not to reduce the annual liability. No penalties, interest or outstanding loan balances are modelled. Monthly figures are a budgeting average.</li><li>For other income, business take-home deducts only the extra Income Tax attributable to business profit, plus Class 4 NI. It does not include other income in take-home.</li></ul></section>
     <section className="notice"><h2>What should I check next?</h2><p>VAT registration looks at taxable turnover, not profit. Check rolling 12-month turnover and the separate next-30-days test.</p><Link className="text-link" href="/tools/vat-threshold-checker">Explore the VAT checker →</Link><p>Making Tax Digital considers qualifying gross self-employment and property income in the relevant reference year, rather than the profit estimated here.</p><Link className="text-link" href="/tools/mtd-checker">Explore Making Tax Digital →</Link></section>
