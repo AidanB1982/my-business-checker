@@ -10,18 +10,23 @@ const orderSchema=z.object({name:z.string(),legacyResourceId:z.string().regex(/^
 const QUERY=`query RecoverMembership($query:String!) { orders(first:2,query:$query) { nodes { name legacyResourceId displayFinancialStatus currencyCode taxesIncluded test cancelledAt customer { legacyResourceId } customAttributes { key value } totalPriceSet { shopMoney { amount currencyCode } } totalRefundedSet { shopMoney { amount currencyCode } } lineItems(first:2) { pageInfo { hasNextPage } nodes { id variant { legacyResourceId } quantity requiresShipping originalUnitPriceSet { shopMoney { amount currencyCode } } taxLines { priceSet { shopMoney { amount currencyCode } } } } } transactions(first:100) { kind status processedAt amountSet { shopMoney { amount currencyCode } } } } } }`;
 export async function readRecoverableOrder(config:Config,orderNumber:string,fetcher:typeof fetch=fetch){
  if(!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(config.store)||!config.clientId||!config.clientSecret)throw new ApiError(503,'Order recovery needs the installed Shopify app credentials [REC_CONFIG].');
- async function call(url:string,options:RequestInit){
+ async function call(stage:'AUTH'|'SCOPES'|'ORDER',url:string,options:RequestInit){
   let response:Response;try{response=await fetcher(url,{...options,cache:'no-store',signal:AbortSignal.timeout(15000)});}catch{throw new ApiError(502,'Shopify could not be reached [REC_NETWORK].');}
-  if([401,403].includes(response.status))throw new ApiError(503,'Order recovery needs valid app credentials and read_orders access [REC_ACCESS].');
+  if([401,403].includes(response.status))throw new ApiError(503,stage==='AUTH'?'Shopify rejected the integration credentials or installation [REC_AUTH_ACCESS].':`Shopify rejected the ${stage==='SCOPES'?'installed permission check':'order API request'}. Check the integration credentials and store installation [REC_${stage}_HTTP_ACCESS].`);
   if(!response.ok)throw new ApiError(502,'Shopify order lookup failed [REC_HTTP].');
   try{return await response.json();}catch{throw new ApiError(502,'Shopify returned an invalid response [REC_RESPONSE].');}
  }
- const auth=await call(`https://${config.store}/admin/oauth/access_token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'client_credentials',client_id:config.clientId,client_secret:config.clientSecret}).toString()});
+ const auth=await call('AUTH',`https://${config.store}/admin/oauth/access_token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'client_credentials',client_id:config.clientId,client_secret:config.clientSecret}).toString()});
  if(typeof auth.access_token!=='string'||!auth.access_token)throw new ApiError(503,'Shopify app authentication failed [REC_AUTH].');
+ const installed=await call('SCOPES',`https://${config.store}/admin/api/2026-10/graphql.json`,{method:'POST',headers:{'Content-Type':'application/json','X-Shopify-Access-Token':auth.access_token},body:JSON.stringify({query:'query MembershipRecoveryScopes { currentAppInstallation { accessScopes { handle } } }'})});
+ if(installed.errors?.length)throw new ApiError(503,'The installed Shopify app permissions could not be checked [REC_SCOPE_CHECK].');
+ const granted=z.array(z.object({handle:z.string()})).safeParse(installed.data?.currentAppInstallation?.accessScopes);
+ if(!granted.success)throw new ApiError(502,'Shopify returned an invalid installed-permission response [REC_SCOPE_RESPONSE].');
+ if(!granted.data.some(scope=>scope.handle==='read_orders'))throw new ApiError(503,'The installed Shopify app has not granted read_orders. Release the configured version and approve the store installation permissions [REC_SCOPE_MISSING].');
  const name=orderNumber.startsWith('#')?orderNumber:`#${orderNumber}`;
- const body=await call(`https://${config.store}/admin/api/2026-10/graphql.json`,{method:'POST',headers:{'Content-Type':'application/json','X-Shopify-Access-Token':auth.access_token},body:JSON.stringify({query:QUERY,variables:{query:`name:${name}`}})});
+ const body=await call('ORDER',`https://${config.store}/admin/api/2026-10/graphql.json`,{method:'POST',headers:{'Content-Type':'application/json','X-Shopify-Access-Token':auth.access_token},body:JSON.stringify({query:QUERY,variables:{query:`name:${name}`}})});
  if(body.errors?.length){
-  if(body.errors.some((error:{extensions?:{code?:string}})=>error.extensions?.code==='ACCESS_DENIED'))throw new ApiError(503,'Order recovery needs read_orders access on the installed Shopify app [REC_ACCESS].');
+  if(body.errors.some((error:{extensions?:{code?:string}})=>error.extensions?.code==='ACCESS_DENIED'))throw new ApiError(503,'The installed app has read_orders, but Shopify denied fields needed to verify the order. Check its order/customer data access permissions [REC_ORDER_DATA_ACCESS].');
   throw new ApiError(502,'Shopify order lookup could not be completed [REC_QUERY].');
  }
  const candidates=body.data?.orders?.nodes;
