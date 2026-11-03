@@ -20,10 +20,13 @@ export async function projectFixture(page:Page,{viewer=false,conflict=false}={})
   if(!url.pathname.startsWith('/api/'))return route.fulfill({contentType:'text/html',body:`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Project UI fixture</title><style>${css}</style></head><body><div id="root"></div><script src="/fixture.js"></script></body></html>`});
   const json=(body:unknown,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
   if(url.pathname==='/api/projects')return json({memberships:[{...data.members[0],workspace:data.workspace}],canCreate:!viewer});
+  if(url.pathname.endsWith('/figures'))return json({figures:data.projects.map(p=>({project_id:p.id,capital:0,expense:0,completed:0,depreciation:0}))});
   if(url.pathname.endsWith('/comments'))return json({comments:[],hasMore:false});
   if(route.request().method()==='GET')return json(data);
   const input=route.request().postDataJSON();mutations.push(input);
   if(conflict)return json({error:'This task changed. Reload it before saving again.'},409);
+  if(input.action==='project.create'){const id=crypto.randomUUID();data.projects.push({...input.data,id,workspace_id:workspaceId,version:1,created_at:stamp,updated_at:stamp});return json({id});}
+  if(input.action==='project.update'){const p=data.projects.find(p=>p.id===input.id)!;Object.assign(p,input.data,{version:p.version+1});}
   if(input.action==='task.create'){data.tasks.push({...input.data,id:crypto.randomUUID(),workspace_id:workspaceId,created_by:owner,version:1,created_at:stamp,updated_at:stamp});}
   if(input.action==='task.update'){const index=data.tasks.findIndex(task=>task.id===input.id);data.tasks[index]={...data.tasks[index],...input.data,version:data.tasks[index].version+1};}
   if(input.action==='milestone.create')data.milestones.push({...input.data,id:crypto.randomUUID(),workspace_id:workspaceId,version:1,created_at:stamp});

@@ -46,3 +46,7 @@ The package does **not** calculate taxable profit, VAT controls/returns, capital
 - Corrections and retest evidence: **pending**
 - Written acceptance, limitations and launch decision: **pending**
 - Hosted disaster-recovery rehearsal: see BOOKKEEPING-RECOVERY.md; **pending operator rehearsal**
+
+## Construction and depreciation review extension — pending
+
+Review `tests/unit/construction-assets-database.test.ts`: kitchen capital £1,200 and roof £600; complete kitchen only, leaving £600 construction and £1,200 equipment, with no expense or extra cash at completion. A three-month depreciable amount of £1,100 rounds cumulatively to £366.67, £733.33, £1,100.00, ending at the chosen residual. Separately check repair allocation without posting, capital reclassification without repaying a bill, eventual supplier settlement, completion cutoff, first-full-month convention, catch-up charges, manual legacy equipment protection, reversal restrictions and register/ledger restore agreement. Confirm suitability for each asset and residential-landlord reporting basis; automatic property depreciation and tax deductions are not claimed. Independent acceptance of this extension remains pending.

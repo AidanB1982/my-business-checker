@@ -1,6 +1,6 @@
 import { z } from 'zod';
 export const accounts=[
- ['bank','Bank','asset'],['cash','Cash in hand','asset'],['receivable','Money customers or tenants owe','asset'],['equipment','Equipment at book value','asset'],['property','Property at book value','asset'],
+ ['bank','Bank','asset'],['cash','Cash in hand','asset'],['receivable','Money customers or tenants owe','asset'],['equipment','Equipment at book value','asset'],['property','Property at book value','asset'],['construction','Assets under construction','asset'],['accumulated_depreciation','Accumulated depreciation (asset reduction)','asset'],
  ['payable','Unpaid supplier bills','liability'],['loan','Business loan outstanding','liability'],['mortgage','Mortgage outstanding','liability'],['deposits','Refundable tenant deposits held','liability'],
  ['capital','Owner’s money invested','equity'],['drawings','Money taken for personal use','equity'],
  ['sales','Business sales','income'],['rent','Rental income','income'],

@@ -4,7 +4,7 @@ An installable Next.js/TypeScript app for UK small-business estimates. Core tool
 
 ## Development
 
-Advanced also includes [plain-English bookkeeping](docs/BOOKKEEPING.md) at `/bookkeeping`, with guided setup, profit and loss, balance sheets, monthly health checks, branded customer invoices, manual bank reconciliation, accountant ZIP packs and portable backups. Apply the bookkeeping migrations in the documented order before use. See the [accounting review pack](docs/ACCOUNTING-REVIEW.md) and [restore runbook](docs/BOOKKEEPING-RECOVERY.md); independent sign-off and hosted recovery rehearsal remain pending. It is an accrual bookkeeping workspace, not a VAT/tax-filing package.
+Advanced also includes [plain-English bookkeeping](docs/BOOKKEEPING.md) at `/bookkeeping`, with guided setup, profit and loss, balance sheets, monthly health checks, branded customer invoices, manual bank reconciliation, construction projects and equipment depreciation, accountant ZIP packs and portable backups. Apply the bookkeeping migrations in the documented order before use. See the [accounting review pack](docs/ACCOUNTING-REVIEW.md) and [restore runbook](docs/BOOKKEEPING-RECOVERY.md); independent sign-off and hosted recovery rehearsal remain pending. It is an accrual bookkeeping workspace, not a VAT/tax-filing package.
 
 Node.js 24 recommended (minimum 22).
 
@@ -73,3 +73,5 @@ The checkout adapter, raw-body HMAC verification, atomic paid-order ledger, dupl
 The installable app needs HTTPS hosting and real-phone testing. GitHub Actions runs checks; Vercel deployment is separate. Keep preview labels and crawler restrictions until official rule review and operator/privacy/contact details are completed. Accounts/payments are never fabricated for tests.
 
 Use the existing checkout in each isolated cloud task; no extra Git worktree is needed. Processes must restart in future tasks. Start with `npm run dev` or build and run `npm run start` for production-mode checks.
+
+Project descriptions, subprojects, Gantt-style dates, budgets and private linked asset costs are documented in [Projects and assets](docs/PROJECT-ASSETS.md), including migrations 005 and 006.

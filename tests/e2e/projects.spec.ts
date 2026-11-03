@@ -58,7 +58,7 @@ test('milestones, workload and email-bound invitation controls work',async({page
  await expect(page.getByRole('button',{name:'Launch signed off',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Timeline',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Timeline and milestones'})).toBeVisible();
- await expect(page.locator('.timeline-row')).toHaveCount(2);
+ await expect(page.locator('.timeline-row')).toHaveCount(3);
  await page.getByRole('button',{name:'Workload',exact:true}).click();
  await page.getByLabel('Workload week containing').fill('2026-11-03');
  await expect(page.locator('.workload-hours')).toContainText('8h');
@@ -98,10 +98,16 @@ for(const width of [375,768,1440])test(`workspace views fit a ${width}px viewpor
  await page.setViewportSize({width,height:900});
  await projectFixture(page);
  await expect(page.getByRole('heading',{name:'Publishing studio'})).toBeVisible();
- for(const view of ['Overview','Board','Task list','Calendar','Timeline','Workload','Team & settings']){
+ for(const view of ['Overview','Board','Task list','Calendar','Timeline','Budget & costs','Workload','Team & settings']){
   await page.getByRole('button',{name:view,exact:true}).click();
   if(width===1440&&view==='Board')await page.screenshot({path:'/tmp/my-business-checker-project-board.png',fullPage:true});
   const overflow=await page.evaluate(()=>Array.from(document.querySelectorAll('*')).filter(node=>{const r=node.getBoundingClientRect();return r.right>innerWidth+1&&r.width>0;}).slice(0,8).map(node=>({tag:node.tagName,class:node.className,width:node.getBoundingClientRect().width})));
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${view}: ${JSON.stringify(overflow)}`).toBe(true);
  }
+});
+test('free-form subprojects roll tasks and budgets into the main project',async({page})=>{
+ await page.setViewportSize({width:375,height:812});const {data}=await projectFixture(page);
+ await page.getByRole('button',{name:'New project',exact:true}).click();await page.getByLabel('Project name',{exact:true}).fill('Property refurbishment');await page.getByLabel('Project brief',{exact:true}).fill('Prepare the property for new tenants.');await page.getByLabel('Budget for this project (£)',{exact:true}).fill('1000');await page.getByRole('button',{name:'Create project',exact:true}).click();await expect.poll(()=>data.projects.length).toBe(2);await expect(page.getByRole('dialog')).toHaveCount(0);const main=data.projects.find(p=>p.name==='Property refurbishment')!;
+ await page.getByRole('button',{name:'New project',exact:true}).click();await page.getByLabel('Project name',{exact:true}).fill('Kitchen');await page.getByLabel('Main project (optional)',{exact:true}).selectOption(main.id);await page.getByLabel('Budget for this project (£)',{exact:true}).fill('2000');await page.getByLabel('Unspent commitments (£)',{exact:true}).fill('500');await page.getByRole('button',{name:'Create project',exact:true}).click();await expect.poll(()=>data.projects.length).toBe(3);await expect(page.getByRole('dialog')).toHaveCount(0);
+ await page.getByLabel('Project focus',{exact:true}).selectOption(main.id);await page.getByRole('button',{name:'Budget & costs',exact:true}).click();const mainCard=page.locator('.project-budget article').filter({has:page.getByRole('heading',{name:'Property refurbishment',exact:true})});await expect(mainCard).toContainText('£3,000.00');await expect(mainCard).toContainText('£500.00');await expect(mainCard.getByRole('link',{name:'Open project costs and asset workings →'})).toHaveAttribute('href',new RegExp('planning='+main.id));expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

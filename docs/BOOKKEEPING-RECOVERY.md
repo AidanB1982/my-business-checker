@@ -2,7 +2,7 @@
 
 ## What is implemented and tested
 
-The owner can download an accountant report ZIP for selected dates and a separate compressed portable backup for all dates in one book. Exports remain readable after Advanced expires. A database snapshot RPC exports all rows from twelve explicitly named bookkeeping tables in a single statement snapshot, including full invoices, draft/issued snapshots, contacts, audit, locks, bank checks, branding assets and the owner-wide invoice number watermark. It refuses oversized exports rather than silently truncating them. The report ZIP is not a restore file.
+The owner can download an accountant report ZIP for selected dates and a separate compressed portable backup for all dates in one book. Exports remain readable after Advanced expires. A database snapshot RPC exports all rows from sixteen explicitly named bookkeeping tables in a single statement snapshot, including construction projects, cost allocations, registered assets, depreciation charges, full invoices, draft/issued snapshots, contacts, audit, locks, bank checks, branding assets and the owner-wide invoice number watermark. It refuses oversized exports rather than silently truncating them. The report ZIP is not a restore file.
 
 The portable JSON envelope contains a SHA-256 checksum of canonically ordered data. This detects accidental changes, not malicious edits or authenticity: anyone able to edit a file can recompute its checksum. Store backups encrypted, restrict access, record a checksum separately, and apply a retention policy. Downloads contain personal and financial data.
 
@@ -35,3 +35,5 @@ Hosted rehearsal evidence: **pending**. Independent accounting acceptance: **pen
 ## Deploying this release
 
 Apply `202611030004_premium_bookkeeping.sql` after the existing bookkeeping, contacts and invoices migrations, using the Supabase SQL editor. No new environment variables or API credentials are needed. The new RPC is owner-scoped; the service-role key is not used. Until applied, the exports show the existing setup-required error. Existing invoice profiles default to the standard colour and no logo.
+
+For construction assets, apply migration 006 after 004. Portable backup version 2 includes the four asset tables; version-one files remain verifiable/restorable. See PROJECT-ASSETS.md for planning links and depreciation policies.

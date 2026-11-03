@@ -83,3 +83,7 @@ Customer branding supports a six-digit colour and a PNG logo. The browser accept
 **Download accountant pack** creates one ZIP with P&L, balance sheet, trial balance, period ledger, carry-forward ledger, outstanding invoices, contact balances, bank checks, audit, health checks and checksummed manifest. **Download portable backup** includes complete invoice details/snapshots and every exported bookkeeping row, across all dates in this book. It differs from the older records-JSON export, which has invoice summaries only. Both complete exports remain owner-only and work after membership expires. No full export silently drops records at size limits.
 
 See [accounting review](ACCOUNTING-REVIEW.md) for the hand-calculated case and external sign-off status, and [recovery](BOOKKEEPING-RECOVERY.md) for the isolated restore verifier and the pending hosted backup/recovery rehearsal. Daily backup scheduling and independent accounting approval are not claimed by these software changes.
+
+## Construction projects and assets
+
+See [project and asset workflow](PROJECT-ASSETS.md). Migration 006 adds private cost projects, existing-cost allocation, construction-to-asset completion and reviewed straight-line equipment depreciation. Apply project migration 005 for planning hierarchy. Property and land are not automatically depreciated.
