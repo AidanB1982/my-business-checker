@@ -29,3 +29,9 @@ it('validates named account fields and routes writes through the paid bookkeepin
  expect((await POST(request({action:'contact.save',id:contact,data:{kind:'supplier',name:'Supplier'},version:2,archived:true}),ctx)).status).toBe(200);expect(state.calls.at(-1)).toMatchObject({name:'bookkeeping_save_contact',args:{p_book:id,p_contact:contact,p_version:2,p_archived:true}});
  state.paid=false;expect((await POST(request({action:'contact.opening',contact_id:contact,amount:10000}),ctx)).status).toBe(402);
 });
+it('validates invoice lines and routes draft saves through the protected database function',async()=>{
+ const invoice={kind:'customer',contact_id:id,invoice_date:'2026-01-10',supply_date:'2026-01-10',due_date:'2026-02-10',lines:[{description:'Work',quantity_milli:1000,unit_pence:10000,category:'general'}]};
+ expect((await POST(request({action:'invoice.save',id,data:{...invoice,lines:[{...invoice.lines[0],unit_pence:0}]}}),ctx)).status).toBe(400);
+ expect((await POST(request({action:'invoice.save',id,data:invoice}),ctx)).status).toBe(200);expect(state.calls.at(-1)).toMatchObject({name:'bookkeeping_save_invoice',args:{p_book:id,p_invoice:id}});
+ state.paid=false;expect((await POST(request({action:'invoice.issue',id,version:1,contact_version:1,profile_version:1}),ctx)).status).toBe(402);
+});

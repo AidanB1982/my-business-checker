@@ -1,11 +1,16 @@
 import { z } from 'zod';
 import { authenticated,checkOrigin,apiError,ApiError } from '@/lib/api';
 import { entrySchema,openingSchema,guidedPosting,openingPosting,type BookData } from '@/lib/bookkeeping/engine';
+import { invoiceDraftSchema,invoiceProfileSchema,invoiceTotal } from '@/lib/bookkeeping/invoices';
 import { contactSchema } from '@/lib/bookkeeping/contacts';
 import { booksJSON,booksError,booksBody } from '@/lib/bookkeeping/server';
 type Context={params:Promise<{id:string}>};
 const date=z.string().regex(/^20\d{2}-\d{2}-\d{2}$/);
 const actions=z.discriminatedUnion('action',[
+ z.object({action:z.literal('invoice.profile'),data:invoiceProfileSchema,version:z.number().int().min(1).optional()}).strict(),
+ z.object({action:z.literal('invoice.save'),id:z.uuid(),data:invoiceDraftSchema,version:z.number().int().min(1).optional()}).strict(),
+ z.object({action:z.literal('invoice.issue'),id:z.uuid(),version:z.number().int().min(1),contact_version:z.number().int().min(1),profile_version:z.number().int().min(1).optional()}).strict(),
+ z.object({action:z.literal('invoice.delete'),id:z.uuid(),version:z.number().int().min(1)}).strict(),
  z.object({action:z.literal('contact.save'),id:z.uuid(),data:contactSchema,version:z.number().int().min(1).optional(),archived:z.boolean().default(false)}).strict(),
  z.object({action:z.literal('contact.opening'),contact_id:z.uuid(),amount:z.number().int().min(0).max(100000000000)}).strict(),
  z.object({action:z.literal('contact.link'),journal_id:z.uuid(),contact_id:z.uuid().nullable()}).strict(),
@@ -19,7 +24,11 @@ export async function POST(request:Request,{params}:Context){try{
  const parsed=actions.safeParse(await booksBody(request));if(!parsed.success)throw new ApiError(400,'Check the dates, amounts and required fields. Amounts must be whole pence.');const input=parsed.data;
  const {data:raw,error:readError}=await supabase.rpc('bookkeeping_read',{p_book:id});booksError(readError);const book=raw as BookData;if(!book.canWrite)throw new ApiError(402,'An active Advanced membership is required to record changes.');
  let result;
- if(input.action==='contact.save')result=await supabase.rpc('bookkeeping_save_contact',{p_book:id,p_contact:input.id,p_data:input.data,p_version:input.version??null,p_archived:input.archived});
+ if(input.action==='invoice.profile')result=await supabase.rpc('bookkeeping_invoice_profile',{p_book:id,p_data:input.data,p_version:input.version??null});
+ else if(input.action==='invoice.save'){try{invoiceTotal(input.data.lines);}catch(error){throw new ApiError(400,error instanceof Error?error.message:'Check the invoice total.');}result=await supabase.rpc('bookkeeping_save_invoice',{p_book:id,p_invoice:input.id,p_data:input.data,p_version:input.version??null});}
+ else if(input.action==='invoice.issue')result=await supabase.rpc('bookkeeping_issue_invoice',{p_book:id,p_invoice:input.id,p_version:input.version,p_contact_version:input.contact_version,p_profile_version:input.profile_version??null});
+ else if(input.action==='invoice.delete')result=await supabase.rpc('bookkeeping_delete_invoice',{p_book:id,p_invoice:input.id,p_version:input.version});
+ else if(input.action==='contact.save')result=await supabase.rpc('bookkeeping_save_contact',{p_book:id,p_contact:input.id,p_data:input.data,p_version:input.version??null,p_archived:input.archived});
  else if(input.action==='contact.opening')result=await supabase.rpc('bookkeeping_contact_opening',{p_book:id,p_contact:input.contact_id,p_amount:input.amount});
  else if(input.action==='contact.link')result=await supabase.rpc('bookkeeping_link_contact',{p_book:id,p_journal:input.journal_id,p_contact:input.contact_id});
  else if(input.action==='entry'){

@@ -18,6 +18,8 @@ The repository has not been deployed merely by pushing GitHub. Future pushes to 
 
 For paid bookkeeping, run `supabase/migrations/202611030001_bookkeeping.sql` once in the existing Supabase project after the previous migrations. No new credentials or Edge Function is needed. See [Bookkeeping setup and scope](BOOKKEEPING.md).
 
+Named accounts use `202611030002_customer_supplier_accounts.sql`; itemised invoicing uses `202611030003_invoices.sql`, in that order after the first bookkeeping migration. Run each only once. Invoicing does not require file storage, uploads or another environment variable.
+
 For the shared Projects section, also run `supabase/migrations/202611010003_project_workspaces.sql` once in the existing Supabase project. A Vercel redeploy does not run database migrations. No additional environment variables or Edge Functions are needed; see [Projects setup](PROJECTS.md).
 
 - iPhone/iPad: open the HTTPS app address in Safari → Share → Add to Home Screen.
