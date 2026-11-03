@@ -1,0 +1,3 @@
+import { readFile,stat } from 'node:fs/promises';
+import { parseBackupFile,restoreAndVerify } from '../src/lib/bookkeeping/restore-verify';
+try{const path=process.argv[2];if(!path)throw new Error();if((await stat(path)).size>4*1024*1024)throw new Error();const result=await restoreAndVerify(parseBackupFile(await readFile(path)));console.log('Verified isolated restore:',JSON.stringify(result));console.log('No production database was contacted or changed.');}catch{console.error('Restore verification failed. Check the file, application version and recovery runbook. No production database was contacted.');process.exitCode=1;}

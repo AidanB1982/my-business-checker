@@ -4,7 +4,7 @@
 
 ## Enable it
 
-Run **only** `supabase/migrations/202611030001_bookkeeping.sql` once in the existing Supabase SQL Editor, after the existing migrations. It is transactional. It creates five tables and the controlled functions/policies. No Edge Function, service key or new environment variable is needed. Deploying Next.js does not apply SQL automatically. Until migration, the app returns `BOOKS_SETUP_REQUIRED`.
+Apply the bookkeeping migrations **once, in order**, in the existing Supabase SQL Editor after the initial account schema: `202611030001_bookkeeping.sql`, `202611030002_customer_supplier_accounts.sql`, `202611030003_invoices.sql`, then `202611030004_premium_bookkeeping.sql`. Each is transactional; only run those not already applied. They create the tables and controlled functions/policies. No Edge Function, service key or new environment variable is needed. Deploying Next.js does not apply SQL automatically. Until migration, the app returns `BOOKS_SETUP_REQUIRED`.
 
 ## Start a book
 
@@ -71,3 +71,15 @@ Full itemised data and preserved party details are available through **Download 
 Additional engine and PostgreSQL tests cover running balances, partial settlements, archived/renamed accounts, separate customer/supplier signs, cross-book access, opening allocations, duplicate retries, inherited payments, reassignment without changing financial lines and prevention of direct posting-core bypass. Browser fixtures exercise account creation, invoice/bill allocation, partial payments, statement CSV and mobile layout. These are test-only fixtures, not production sample records.
 
 Engine tests check double entry, profit/cash differences, owner movements, borrowing, mortgage principal/interest, deposits, unpaid documents, partial payments, prior-period equity, overdrafts, transfers, reversals, dates, penny validation and safe CSV. PostgreSQL/PGlite tests execute the migration and verify subscription enforcement, isolation, direct-write denial, balance constraints, duplicate retries, locks, reconciliation and overpayments. API tests verify the server builds trusted lines and rejects forged fields. Browser tests bundle the real UI with a local test-only API fixture; no auth bypass is shipped. Production multi-account sign-in, real statement checks and accountant review still require the deployed migration and actual users.
+
+## Premium workflow and recovery
+
+Apply `202611030004_premium_bookkeeping.sql` after the invoice migration. Setup progress comes from actual saved records; monthly health checks show overdue new invoices, unassigned control balances, bank matches/check dates and unusual balances, each with a next action. Historical checks retain their cutoff when opening the supporting records. An empty check list does not certify completeness or accuracy.
+
+The dashboard opens profit, debt, cash and payment workings, with up to 12 monthly trend points. Forecast payments include only recorded supplier invoices due in the next 30 days; overdue, legacy undated and unentered costs are excluded. Invoice balance dates can be reviewed historically; recording payments requires today's view.
+
+Customer branding supports a six-digit colour and a PNG logo. The browser accepts at most 256 KB/1024 pixels, strips/resizes it locally to at most 256 pixels and 32 KB, then saves only the reduced logo. No invoice document uploads are introduced. The database validates its size/signature/dimensions and deduplicates it per book. At most 20 different logo versions are retained per book, including old versions needed by issued invoices. Issued colours and logo references remain frozen; print/PDF embeds the original small logo without external image requests. Removing a current logo does not remove an issued invoice's branding.
+
+**Download accountant pack** creates one ZIP with P&L, balance sheet, trial balance, period ledger, carry-forward ledger, outstanding invoices, contact balances, bank checks, audit, health checks and checksummed manifest. **Download portable backup** includes complete invoice details/snapshots and every exported bookkeeping row, across all dates in this book. It differs from the older records-JSON export, which has invoice summaries only. Both complete exports remain owner-only and work after membership expires. No full export silently drops records at size limits.
+
+See [accounting review](ACCOUNTING-REVIEW.md) for the hand-calculated case and external sign-off status, and [recovery](BOOKKEEPING-RECOVERY.md) for the isolated restore verifier and the pending hosted backup/recovery rehearsal. Daily backup scheduling and independent accounting approval are not claimed by these software changes.

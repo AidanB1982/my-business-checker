@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { validLogo } from './branding';
 import { expenseCodes,documentOutstanding,type Journal } from './engine';
 import type { ContactData } from './contacts';
 export const invoiceDay=z.string().regex(/^20\d{2}-\d{2}-\d{2}$/).refine(s=>{const d=new Date(s+'T00:00:00Z');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s;});
 export const invoiceLine=z.object({description:z.string().trim().min(1).max(240),quantity_milli:z.number().int().min(1).max(1000000000),unit_pence:z.number().int().min(0).max(100000000000),category:z.enum(expenseCodes).default('general')}).strict();
 export const invoiceDraftSchema=z.object({kind:z.enum(['customer','supplier']),contact_id:z.uuid(),invoice_date:invoiceDay,supply_date:invoiceDay,due_date:invoiceDay,supplier_number:z.string().trim().max(80).default(''),notes:z.string().trim().max(2000).default(''),lines:z.array(invoiceLine).min(1).max(50)}).strict().refine(d=>d.due_date>=d.invoice_date&&d.supply_date<=d.invoice_date,'Check the supply, invoice and due dates.').refine(d=>d.kind!=='supplier'||d.supplier_number.length>0,'Enter the supplier’s invoice number.');
-export const invoiceProfileSchema=z.object({legal_name:z.string().trim().min(1).max(160),trading_name:z.string().trim().max(160).default(''),address:z.string().trim().min(1).max(500),email:z.union([z.literal(''),z.email()]).default(''),phone:z.string().trim().max(60).default(''),payment_details:z.string().trim().max(500).default(''),not_vat_registered:z.literal(true)}).strict();
+export const invoiceProfileSchema=z.object({legal_name:z.string().trim().min(1).max(160),trading_name:z.string().trim().max(160).default(''),address:z.string().trim().min(1).max(500),email:z.union([z.literal(''),z.email()]).default(''),phone:z.string().trim().max(60).default(''),payment_details:z.string().trim().max(500).default(''),not_vat_registered:z.literal(true),brand_color:z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#24574a'),logo_data:z.string().max(43714).refine(validLogo,'Choose a valid small PNG logo.').default('')}).strict();
 export type InvoiceDraft=z.infer<typeof invoiceDraftSchema>;
 export type InvoiceLine=z.infer<typeof invoiceLine>;
 export type InvoiceProfile=z.infer<typeof invoiceProfileSchema>&{version:number};

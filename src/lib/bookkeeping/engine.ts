@@ -73,7 +73,8 @@ export function accountingReports(data:Pick<BookData,'journals'|'lines'>,from:st
  const cashJournals=journals.filter(j=>j.kind!=='opening'&&j.entry_date>=from);const cashIds=new Set(cashJournals.map(j=>j.id));
  const cashLines=data.lines.filter(l=>cashIds.has(l.journal_id)&&['bank','cash'].includes(l.account));
  // Net each journal first so transfers between bank and cash are not new receipts/spending.
- const movements=cashJournals.map(j=>({journal:j,amount:cashLines.filter(l=>l.journal_id===j.id).reduce((n,l)=>n+l.debit-l.credit,0)}));
+ const cashTotals=new Map<string,number>();for(const l of cashLines)cashTotals.set(l.journal_id,(cashTotals.get(l.journal_id)??0)+l.debit-l.credit);
+ const movements=cashJournals.map(j=>({journal:j,amount:cashTotals.get(j.id)??0}));
  const moneyIn=movements.filter(r=>r.amount>0).reduce((n,r)=>n+r.amount,0),moneyOut=Math.abs(movements.filter(r=>r.amount<0).reduce((n,r)=>n+r.amount,0));
  return {income,expenses,incomeTotal,expenseTotal,profit:incomeTotal-expenseTotal,assets,liabilities,equity,assetTotal,liabilityTotal,equityTotal,balanceDifference:assetTotal-liabilityTotal-equityTotal,trial,trialDifference:trial.reduce((n,r)=>n+r.balance,0),moneyIn,moneyOut,cashMovement:moneyIn-moneyOut,movements};
 }
