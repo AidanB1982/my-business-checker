@@ -30,3 +30,9 @@ Device installation must still be tested on real phones. Browser tests validate 
 ## Current preview limitations
 
 The tax rules still await independent official HMRC source review. Keep preview labels and robots restrictions. All eleven calculator/working-area previews and the Advanced workspace are implemented. Shopify checkout remains disabled until its new migration, server credentials and live integration checks are complete; see docs/SHOPIFY.md. The privacy, contact and operator details need review before a general public launch. Hosting a preview is distinct from a launch-ready financial product.
+
+## CI browser configuration
+
+The GitHub workflow uses Ubuntu 24.04 and Node.js 24 action runtimes. Its anonymous browser checks use a public placeholder Supabase key and a loopback URL at both build and server-start time. These are test configuration only, provide no real account access and are not deployment credentials. Authentication actions and recovery are tested separately with mocked provider transport. Local browser runs without an auth key assert the unavailable state and explicitly skip the configured-form journey; CI's placeholder configuration exercises that journey. Real email delivery and authenticated production account checks still use the deployment's real Supabase settings.
+
+Failed browser checks retain screenshots and traces, with the HTML report and test results uploaded as a short-lived GitHub artifact. View the `playwright-failure-reports` artifact on a failed run for details.
