@@ -1,38 +1,35 @@
 import { beforeEach,describe,it,expect,vi } from 'vitest';
 import { NextRequest } from 'next/server';
-const state=vi.hoisted(()=>({returnTo:'/pricing',setCalls:[] as unknown[],deleted:false,otp:null as unknown,error:false}));
+const state=vi.hoisted(()=>({store:new Map<string,string>(),setCalls:[] as unknown[],calls:[] as {method:string;value:unknown}[],error:false,user:'11111111-1111-4111-8111-111111111111' as string|null,recovery:false,session:false,configured:true}));
 vi.mock('server-only',()=>({}));
 vi.mock('next/navigation',()=>({redirect:(url:string)=>{throw new Error(`REDIRECT ${url}`);}}));
-vi.mock('next/headers',()=>({cookies:async()=>({get:()=>({value:state.returnTo}),set:(name:string,value:string,options:unknown)=>{state.setCalls.push([name,value,options]);},delete:()=>{state.deleted=true;}})}));
-vi.mock('@/lib/config',()=>({SITE_URL:'https://app.test',isSupabaseConfigured:()=>true}));
-vi.mock('@/lib/supabase/server',()=>({createClient:async()=>({auth:{signInWithOtp:async(value:unknown)=>{state.otp=value;return {error:state.error?{message:'fixture failure'}:null};},exchangeCodeForSession:async()=>({error:state.error?{message:'expired'}:null})}})}));
-import { AUTH_RETURN_COOKIE,authReturnPath } from '../../src/lib/auth-navigation';
-import { signIn } from '../../src/app/auth/actions';
+vi.mock('next/headers',()=>({cookies:async()=>({get:(name:string)=>state.store.has(name)?{value:state.store.get(name)}:undefined,set:(name:string,value:string,options:unknown)=>{state.store.set(name,value);state.setCalls.push([name,value,options]);},delete:(name:string)=>state.store.delete(name)})}));
+vi.mock('@/lib/config',()=>({SITE_URL:'https://app.test',isSupabaseConfigured:()=>state.configured}));
+vi.mock('@/lib/supabase/server',()=>({createClient:async()=>({auth:{signInWithPassword:async(value:unknown)=>{state.calls.push({method:'password',value});return {error:state.error?{message:'provider details'}:null};},signUp:async(value:unknown)=>{state.calls.push({method:'signup',value});return {data:{session:state.session?{}:null},error:state.error?{message:'provider details'}:null};},resetPasswordForEmail:async(email:string,options:unknown)=>{state.calls.push({method:'reset',value:{email,options}});return {error:state.error?{message:'provider details'}:null};},getUser:async()=>({data:{user:state.user?{id:state.user}:null},error:null}),updateUser:async(value:unknown)=>{state.calls.push({method:'update',value});return {error:state.error?{message:'provider details'}:null};},signOut:async()=>({error:null}),exchangeCodeForSession:async()=>({data:{user:state.user?{id:state.user}:null,session:{},redirectType:state.recovery?'recovery':null},error:state.error?{message:'expired'}:null})}})}));
+import { AUTH_RETURN_COOKIE,AUTH_RECOVERY_COOKIE,authReturnPath } from '../../src/lib/auth-navigation';
+import { signIn,register,requestPasswordReset,updatePassword,signOut } from '../../src/app/auth/actions';
 import { GET } from '../../src/app/auth/callback/route';
-beforeEach(()=>{state.returnTo='/pricing';state.setCalls=[];state.deleted=false;state.otp=null;state.error=false;});
-describe('pricing sign-in continuation',()=>{
+const password='A long example passphrase 42';
+function form(extra:Record<string,string>={}){const data=new FormData();for(const [k,v] of Object.entries({email:'fixture@example.test',password,confirm_password:password,returnTo:'/pricing',...extra}))data.set(k,v);return data;}
+beforeEach(()=>{state.store=new Map([[AUTH_RETURN_COOKIE,'/pricing']]);state.setCalls=[];state.calls=[];state.error=false;state.recovery=false;state.user='11111111-1111-4111-8111-111111111111';state.session=false;state.configured=true;});
+describe('safe authentication navigation',()=>{
  it.each(['https://evil.test','//evil.test','/pricing?next=evil','/admin','/projects/../admin','/projects?workspace=bad','//projects','/learn/../admin','/learn/%2f%2fevil','/learn/example?next=evil','/learn/\\evil',undefined])('does not accept untrusted redirect %s',value=>{expect(authReturnPath(value)).toBe('/account');});
- it('records a safe pricing return without changing the allowed Supabase callback URL',async()=>{
-  const form=new FormData();form.set('email','fixture@example.test');form.set('returnTo','/pricing');
-  await expect(signIn(form)).rejects.toThrow('status=sent&next=%2Fpricing');
-  expect(state.setCalls[0]).toEqual([AUTH_RETURN_COOKIE,'/pricing',expect.objectContaining({httpOnly:true,secure:true,sameSite:'lax',path:'/'})]);
-  expect(state.otp).toMatchObject({options:{emailRedirectTo:'https://app.test/auth/callback'}});
- });
- it('preserves an internal lesson destination through sign-in',async()=>{state.returnTo='/learn/sole-trader-bank-review';const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));expect(response.headers.get('location')).toBe('https://app.test/learn/sole-trader-bank-review');});
- it.each(['/projects','/projects/join'])('keeps project sign-in destinations internal (%s)',async destination=>{state.returnTo=destination;const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));expect(response.headers.get('location')).toBe(`https://app.test${destination}`);});
- it('returns a successful email sign-in directly to pricing',async()=>{
-  const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));
-  expect(response.headers.get('location')).toBe('https://app.test/pricing');expect(state.deleted).toBe(true);
- });
- it('ignores a forged cookie and untrusted callback query',async()=>{
-  state.returnTo='https://evil.test';const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture&next=https://evil.test'));
-  expect(response.headers.get('location')).toBe('https://app.test/account');
- });
- it('preserves the pricing destination when requesting a replacement expired link',async()=>{
-  state.error=true;const response=await GET(new NextRequest('https://app.test/auth/callback?code=expired'));
-  expect(response.headers.get('location')).toBe('https://app.test/sign-in?status=expired&next=%2Fpricing');
- });
- it('keeps sign-in failures on the intended pricing flow',async()=>{
-  state.error=true;const form=new FormData();form.set('email','fixture@example.test');form.set('returnTo','/pricing');await expect(signIn(form)).rejects.toThrow('status=error&next=%2Fpricing');
- });
+ it.each(['/pricing','/bookkeeping','/projects','/projects/join','/learn/sole-trader-bank-review'])('signs in using a password and returns to %s',async destination=>{await expect(signIn(form({returnTo:destination}))).rejects.toThrow('REDIRECT '+destination);expect(state.calls).toEqual([{method:'password',value:{email:'fixture@example.test',password}}]);expect(state.store.has(AUTH_RETURN_COOKIE)).toBe(false);});
+ it('keeps invalid credentials generic and preserves the safe return destination',async()=>{state.error=true;await expect(signIn(form())).rejects.toThrow('status=credentials&next=%2Fpricing');expect(state.calls).toHaveLength(1);});
+ it('rejects invalid input and unconfigured sign-in before provider requests',async()=>{await expect(signIn(form({password:''}))).rejects.toThrow('status=invalid');expect(state.calls).toEqual([]);state.configured=false;await expect(signIn(form())).rejects.toThrow('status=unavailable');});
+ it.each(['/pricing','/projects','/projects/join','/bookkeeping','/learn/sole-trader-bank-review'])('preserves a confirmation callback destination %s',async destination=>{state.store.set(AUTH_RETURN_COOKIE,destination);const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));expect(response.headers.get('location')).toBe('https://app.test'+destination);expect(state.store.has(AUTH_RETURN_COOKIE)).toBe(false);});
+ it('ignores forged return cookies and callback query redirects',async()=>{state.store.set(AUTH_RETURN_COOKIE,'https://evil.test');const response=await GET(new NextRequest('https://app.test/auth/callback?code=fixture&next=https://evil.test'));expect(response.headers.get('location')).toBe('https://app.test/account');});
+ it('keeps an expired callback on the original flow without granting password-change access',async()=>{state.error=true;const r=await GET(new NextRequest('https://app.test/auth/callback?code=expired'));expect(r.headers.get('location')).toBe('https://app.test/sign-in?status=expired&next=%2Fpricing');expect(state.store.has(AUTH_RECOVERY_COOKIE)).toBe(false);});
+});
+describe('registration and recovery',()=>{
+ it('creates a password account with email confirmation on the existing callback URL',async()=>{await expect(register(form())).rejects.toThrow('status=confirm&next=%2Fpricing');expect(state.calls[0]).toMatchObject({method:'signup',value:{options:{emailRedirectTo:'https://app.test/auth/callback'}}});expect(state.setCalls[0]).toEqual([AUTH_RETURN_COOKIE,'/pricing',expect.objectContaining({httpOnly:true,secure:true,sameSite:'lax',path:'/'})]);});
+ it('returns immediate confirmed signups to their safe destination',async()=>{state.session=true;await expect(register(form({returnTo:'/bookkeeping'}))).rejects.toThrow('REDIRECT /bookkeeping');expect(state.store.has(AUTH_RETURN_COOKIE)).toBe(false);});
+ it('requires matching strong passwords before signup',async()=>{await expect(register(form({password:'short',confirm_password:'short'}))).rejects.toThrow('status=password');await expect(register(form({confirm_password:'different'}))).rejects.toThrow('status=password');expect(state.calls).toEqual([]);});
+ it('returns the same reset-request message regardless of provider account errors',async()=>{await expect(requestPasswordReset(form())).rejects.toThrow('status=reset-sent&next=%2Fpricing');expect(state.calls[0]).toEqual({method:'reset',value:{email:'fixture@example.test',options:{redirectTo:'https://app.test/auth/callback'}}});state.error=true;await expect(requestPasswordReset(form())).rejects.toThrow('status=reset-sent&next=%2Fpricing');});
+ it('routes a proven recovery exchange to password reset and binds a short-lived cookie to the user',async()=>{state.recovery=true;const r=await GET(new NextRequest('https://app.test/auth/callback?code=fixture'));expect(r.headers.get('location')).toBe('https://app.test/reset-password');expect(state.setCalls.at(-1)).toEqual([AUTH_RECOVERY_COOKIE,state.user,expect.objectContaining({httpOnly:true,secure:true,sameSite:'lax',maxAge:900})]);expect(state.store.get(AUTH_RETURN_COOKIE)).toBe('/pricing');});
+ it('does not treat a normal confirmation or a forged query as recovery',async()=>{const r=await GET(new NextRequest('https://app.test/auth/callback?code=fixture&type=recovery'));expect(r.headers.get('location')).toBe('https://app.test/pricing');expect(state.store.has(AUTH_RECOVERY_COOKIE)).toBe(false);});
+ it('requires a validated recovery user matching the cookie before updating a password',async()=>{await expect(updatePassword(form())).rejects.toThrow('recovery-expired');expect(state.calls).toEqual([]);state.store.set(AUTH_RECOVERY_COOKIE,'different-user');await expect(updatePassword(form())).rejects.toThrow('recovery-expired');expect(state.calls).toEqual([]);});
+ it('updates a recovered password, clears recovery state and preserves continuation',async()=>{state.store.set(AUTH_RECOVERY_COOKIE,state.user!);await expect(updatePassword(form())).rejects.toThrow('REDIRECT /pricing');expect(state.calls).toEqual([{method:'update',value:{password}}]);expect(state.store.has(AUTH_RECOVERY_COOKIE)).toBe(false);expect(state.store.has(AUTH_RETURN_COOKIE)).toBe(false);});
+ it('does not consume recovery access for a mistyped or rejected password',async()=>{state.store.set(AUTH_RECOVERY_COOKIE,state.user!);await expect(updatePassword(form({confirm_password:'wrong'}))).rejects.toThrow('/reset-password?status=password');expect(state.calls).toEqual([]);state.error=true;await expect(updatePassword(form())).rejects.toThrow('/reset-password?status=error');expect(state.store.has(AUTH_RECOVERY_COOKIE)).toBe(true);});
+ it('clears recovery and return cookies on sign-out',async()=>{state.store.set(AUTH_RECOVERY_COOKIE,state.user!);await expect(signOut()).rejects.toThrow('REDIRECT /sign-in');expect(state.store.size).toBe(0);});
 });

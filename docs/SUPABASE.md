@@ -10,7 +10,7 @@ Project: https://rreneammvssheldpgrxg.supabase.co
 
 Use `.env.local` locally or Vercel environment settings in production. Public variables are embedded at build time, so redeploy after changes. Never put a secret/service-role key in any `NEXT_PUBLIC_` variable.
 
-In Authentication → URL Configuration, Site URL is the origin **without** `/auth/callback`; allow that origin plus `/auth/callback` in Redirect URLs. Email sign-in uses PKCE: request and open the email link in the same browser. `/api/health` reports configuration presence, not live connectivity. Google OAuth is not implemented.
+In Authentication → URL Configuration, Site URL is the origin **without** `/auth/callback`; allow that origin plus `/auth/callback` in Redirect URLs. Email/password is the primary sign-in method. Registration confirmation and password-reset emails use PKCE: request and open those links in the same browser. `/api/health` reports configuration presence, not live connectivity. Google OAuth is not implemented.
 
 ## Migrations
 
@@ -33,3 +33,15 @@ The server recalculates a save from validated inputs; it does not trust a browse
 `SUPABASE_SERVICE_ROLE_KEY` is server-only and is needed only for Shopify checkout linking and signed billing events. Enter it securely in Vercel; do not paste it into chat or commit it. See [Shopify setup](SHOPIFY.md) for the matching webhook/Storefront configuration.
 
 Local tests verify RLS with two users, signature rejection, paid-order idempotency, refunds before payments and owned report APIs. The full paid-user browser journey still needs a real Shopify test order and live Supabase account. Configure production email delivery and complete the operator/privacy/retention details before a general launch.
+
+## Email/password authentication
+
+No SQL migration or new application key is required. Keep the Supabase Email provider enabled. New accounts use email and a password of 12–128 characters, with matching confirmation. Keep email confirmation enabled for public registration. Supabase stores and hashes passwords; the app does not store passwords in its tables, URLs, logs or analytics. The provider may enforce a stricter password policy.
+
+The existing allowed redirect `https://YOUR-APP/auth/callback` is reused for registration confirmation and password recovery. Keep the default ConfirmationURL-based Supabase email templates, Site URL and the deployed NEXT_PUBLIC_SITE_URL aligned. Password-reset emails need working Supabase email delivery; the app does not send mail itself. No separate reset callback URL is needed.
+
+Existing magic-link users choose **Forgot password?** with their existing email and use the reset email to set their first password. This preserves their user ID, subscription and records. Creating another account/email is not necessary. Already issued sign-in/confirmation links continue through the existing callback, but there is no new magic-link sign-in form.
+
+Reset requests always show the same response irrespective of account existence or provider errors. A successful SDK recovery exchange (not a query-string claim) routes to `/reset-password`, sets a 15-minute HttpOnly recovery cookie bound to the recovered user, and preserves the safe internal destination. The page and update action verify the session with getUser and match that cookie. Ordinary signed-in sessions cannot use the app's recovery form directly. Success clears recovery state; logout and a new password sign-in clear stale recovery cookies. Use the latest email in the same browser, particularly after another reset/signup request has replaced the PKCE verifier.
+
+Local unit tests cover login/registration/recovery actions, generic errors, safe continuation, cookie binding, expiry, rejected passwords and the actual installed SDK's PKCE recovery discriminator with mocked provider transport. Browser tests verify fields, password-manager autocomplete, validation, reset navigation and mobile layout. No real reset emails or production password changes are sent by the tests. Before launch, verify registration confirmation, reset email delivery, setting a first password for an existing link-only user, sign-in/out and subscription/record continuity with a controlled live test account. Supabase provider rate limits and email delivery configuration continue to apply.

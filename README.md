@@ -15,7 +15,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-The calculators run locally without an account. Email sign-in uses the configured Supabase project. See [Supabase setup](docs/SUPABASE.md), [deployment](docs/DEPLOYMENT.md) and [Shopify billing](docs/SHOPIFY.md).
+The calculators run locally without an account. Email/password sign-in, registration and password resets use the configured Supabase project. Existing email-link users can set their first password through Forgot password. See [Supabase setup](docs/SUPABASE.md), [deployment](docs/DEPLOYMENT.md) and [Shopify billing](docs/SHOPIFY.md).
 
 Shared **Projects & tasks** are available at `/projects`: workspaces, boards, milestones, deliverables, discussions, weekly workload and team permissions. Owners need Advanced; invited teammates participate under that workspace plan. Apply the new project SQL migration once before use; see [project setup and features](docs/PROJECTS.md).
 
@@ -44,7 +44,7 @@ Scottish and mileage rate tables match the primary-source extracts supplied by t
 
 ## Native sole-trader and landlord sections
 
-`/sole-traders` and `/landlords` adapt the supplied Blackwood Publishing books/workbooks into native working areas and ten lessons (five free, five Advanced). No original DOCX/XLSX files are distributed. `/learn/[slug]` checks premium access on the server and preserves a safe lesson destination through email sign-in.
+`/sole-traders` and `/landlords` adapt the supplied Blackwood Publishing books/workbooks into native working areas and ten lessons (five free, five Advanced). No original DOCX/XLSX files are distributed. `/learn/[slug]` checks premium access on the server and preserves a safe lesson destination through sign-in.
 
 The native sections include three free working areas: sole-trader monthly working, landlord rent/agent reconciliation, and property maintenance reserve planning. Advanced users can save canonical snapshots, compare matching tools and export the existing reports. These are focused workings, not complete bookkeeping ledgers, rental-tax engines or compliance certification. See [native section scope](docs/NATIVE-SECTIONS.md).
 

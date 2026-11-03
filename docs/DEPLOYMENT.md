@@ -10,7 +10,7 @@ An installable web app still needs an HTTPS address to deliver the app to a phon
 4. Add `NEXT_PUBLIC_SUPABASE_URL` with `https://rreneammvssheldpgrxg.supabase.co`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with your public publishable key. Never add a service-role key to a `NEXT_PUBLIC_` variable.
 5. Deploy. After Vercel assigns an address, set `NEXT_PUBLIC_SITE_URL` to that exact HTTPS origin (no trailing callback path) and redeploy. These variables are read at build time.
 6. In Supabase Authentication → URL Configuration, set Site URL to the same HTTPS origin and add `https://YOUR-APP.vercel.app/auth/callback` to Redirect URLs. Keep localhost only for local development.
-7. Verify the home/tools pages, tax preview, sign-in email flow and sign-out at that address. Confirm the deployment is accessible to intended testers; Vercel deployment protection may require sign-in for preview addresses.
+7. Verify the home/tools pages, tax preview, email/password sign-in, registration confirmation, password-reset delivery and sign-out at that address. Confirm the deployment is accessible to intended testers; Vercel deployment protection may require sign-in for preview addresses.
 
 The repository has not been deployed merely by pushing GitHub. Future pushes to the connected production branch trigger Vercel builds once the integration is configured. GitHub Actions checks are separate; configure deployment gates if you want deployment to wait for CI.
 

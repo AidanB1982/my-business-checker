@@ -1,3 +1,4 @@
+export const AUTH_RECOVERY_COOKIE='mbc_password_recovery';
 export const AUTH_RETURN_COOKIE='mbc_sign_in_return';
 export function authReturnPath(value:unknown):'/pricing'|'/account'|'/projects'|'/projects/join'|'/bookkeeping'|`/learn/${string}`{
  if(value==='/pricing')return '/pricing';
