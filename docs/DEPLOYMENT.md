@@ -16,6 +16,8 @@ The repository has not been deployed merely by pushing GitHub. Future pushes to 
 
 ## Install on a phone
 
+For paid bookkeeping, run `supabase/migrations/202611030001_bookkeeping.sql` once in the existing Supabase project after the previous migrations. No new credentials or Edge Function is needed. See [Bookkeeping setup and scope](BOOKKEEPING.md).
+
 For the shared Projects section, also run `supabase/migrations/202611010003_project_workspaces.sql` once in the existing Supabase project. A Vercel redeploy does not run database migrations. No additional environment variables or Edge Functions are needed; see [Projects setup](PROJECTS.md).
 
 - iPhone/iPad: open the HTTPS app address in Safari → Share → Add to Home Screen.

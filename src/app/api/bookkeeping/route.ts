@@ -1,0 +1,5 @@
+import { authenticated,checkOrigin,readJson,apiError,ApiError } from '@/lib/api';
+import { createBookSchema } from '@/lib/bookkeeping/engine';
+import { booksJSON,booksError } from '@/lib/bookkeeping/server';
+export async function GET(){try{const {supabase}=await authenticated();const [{data,error},{data:paid,error:paidError}]=await Promise.all([supabase.from('bookkeeping_books').select('id,name,type,start_date,locked_through,opening_set,created_at').order('created_at'),supabase.rpc('bookkeeping_paid')]);booksError(error??paidError);return booksJSON({books:data??[],canWrite:paid===true});}catch(error){return apiError(error);}}
+export async function POST(request:Request){try{checkOrigin(request);const {supabase}=await authenticated();const parsed=createBookSchema.safeParse(await readJson(request));if(!parsed.success)throw new ApiError(400,'Enter a name, a business type and a valid start date.');const {data,error}=await supabase.rpc('bookkeeping_create',{p_name:parsed.data.name,p_type:parsed.data.type,p_start:parsed.data.start_date});booksError(error);return booksJSON({id:data},201);}catch(error){return apiError(error);}}

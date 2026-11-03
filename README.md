@@ -4,6 +4,8 @@ An installable Next.js/TypeScript app for UK small-business estimates. Core tool
 
 ## Development
 
+Advanced also includes [plain-English bookkeeping](docs/BOOKKEEPING.md) at `/bookkeeping`, with guided entries, profit and loss, balance sheets, invoice/bill controls and manual bank reconciliation. Apply its new SQL migration once before use. It is an accrual bookkeeping workspace, not a VAT/tax-filing package.
+
 Node.js 24 recommended (minimum 22).
 
 ```sh

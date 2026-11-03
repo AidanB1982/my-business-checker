@@ -1,0 +1,14 @@
+import 'server-only';
+import { NextResponse } from 'next/server';
+import { ApiError } from '@/lib/api';
+export const booksJSON=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'private, no-store'}});
+export function booksError(error:{message?:string;code?:string}|null){
+ if(!error)return;
+ const messages:Record<string,[number,string]>={BOOKS_AUTH:[401,'Sign in to use your bookkeeping.'],BOOKS_PERMISSION:[404,'These books are not available to your account.'],BOOKS_PAID:[402,'An active Advanced membership is required to create books and record changes. Existing records remain readable and exportable.'],BOOKS_UNBALANCED:[400,'The entry does not balance. Check both sides before posting.'],BOOKS_DATE:[400,'Check the date. It must be within this book, not in the future, and later than any locked period.'],BOOKS_LOCKED:[409,'That period is locked. Use a correction dated in an open period.'],BOOKS_RECONCILED:[409,'That bank period has already been reconciled. Record any correction after the last statement date.'],BOOKS_OPENING:[409,'Opening balances can only be confirmed once, before other entries.'],BOOKS_OPENING_REQUIRED:[409,'Confirm your opening balances first, including when they are all zero.'],BOOKS_DOCUMENT:[400,'Choose the matching invoice or supplier bill and check the payment date.'],BOOKS_OVERPAYMENT:[409,'The payment exceeds the amount still owed. Refresh the book and check the amount.'],BOOKS_DEPENDANTS:[409,'Later repayments, refunds or depreciation depend on this entry. Reverse those related entries first, or ask your accountant for help.'],BOOKS_REVERSAL:[409,'This entry cannot be reversed again. Opening balances and reversal entries cannot be reversed.'],BOOKS_PAYMENTS_FIRST:[409,'Reverse the linked payments before reversing this invoice or bill.'],BOOKS_RECONCILE:[409,'The selected bank entries do not match the statement. Check the opening balance, closing balance and selected items.'],BOOKS_LIMIT:[409,'This book or account has reached its record limit. Export the records before starting a new book.'],BOOKS_INPUT:[400,'Check the bookkeeping fields.']};
+ const known=messages[error.message??''];if(known)throw new ApiError(...known);
+ if(['PGRST202','PGRST205','42P01','42883'].includes(error.code??''))throw new ApiError(503,'Bookkeeping setup is not complete [BOOKS_SETUP_REQUIRED].');
+ if(['23514','23502','22003','22P02'].includes(error.code??''))throw new ApiError(400,'Check the dates, amounts and account details.');
+ throw new ApiError(503,'The bookkeeping change could not be completed. Retry with the same entry before creating another.');
+}
+
+export async function booksBody(request:Request){const text=await request.text();if(new TextEncoder().encode(text).length>262144)throw new ApiError(413,'The bookkeeping request is too large.');try{return JSON.parse(text);}catch{throw new ApiError(400,'Send a valid bookkeeping entry.');}}

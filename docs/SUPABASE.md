@@ -22,6 +22,8 @@ All migrations are transactional. Inspect for naming conflicts before using them
 
 ## Data permissions
 
+Bookkeeping requires the additional transactional migration `202611030001_bookkeeping.sql`. Posting functions enforce Advanced access and ownership; immutable ledger tables allow only owner reads through RLS. Expired accounts retain read/export access. See [Bookkeeping](BOOKKEEPING.md). Do not rerun the original migrations to enable this feature.
+
 Anonymous visitors cannot read or write account/billing tables. Authenticated users can read their own subscription status but cannot grant themselves paid access. Active Advanced users can save/update their own records; expired users can still read/export/delete their existing records. Normal APIs use the user's authenticated Supabase session and explicitly filter by user ID, in addition to RLS.
 
 The server recalculates a save from validated inputs; it does not trust a browser-provided result. Reports preserve a saved snapshot and its rule version. HTML escapes user text; CSV exports neutralize formula-like cells. Financial figures are sent to the app/Supabase only after explicit save consent, not while calculating.

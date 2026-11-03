@@ -1,7 +1,7 @@
 export const AUTH_RETURN_COOKIE='mbc_sign_in_return';
-export function authReturnPath(value:unknown):'/pricing'|'/account'|'/projects'|'/projects/join'|`/learn/${string}`{
+export function authReturnPath(value:unknown):'/pricing'|'/account'|'/projects'|'/projects/join'|'/bookkeeping'|`/learn/${string}`{
  if(value==='/pricing')return '/pricing';
- if(value==='/projects'||value==='/projects/join')return value;
+ if(value==='/projects'||value==='/projects/join'||value==='/bookkeeping')return value;
  if(typeof value==='string'&&/^\/learn\/[a-z0-9-]{1,100}$/.test(value))return value as `/learn/${string}`;
  return '/account';
 }
