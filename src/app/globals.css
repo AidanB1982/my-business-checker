@@ -120,3 +120,16 @@ footer{border-top:1px solid var(--line);background:white;padding:40px max(40px,c
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.button{transition:none}}
 @media print{.appearance-settings{display:none}:root[data-scheme]{--ink:#173c35;--muted:#65766f;--paper:#fff;--soft:#eef4f0;--line:#e0e8e3;--accent:#137d60}}
 .workspace-section-tile>button:focus-visible{outline-offset:-4px}
+
+/* Owner statistics and optional first-party usage preferences. */
+.owner-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:18px;margin:30px 0}
+.owner-stats h2{font-size:16px;letter-spacing:0;line-height:1.5;margin:0 0 12px}
+.owner-stats .workspace-stat>strong{font-size:34px}
+.owner-stats p{font-size:12px;color:var(--muted);margin:12px 0 0}
+.owner-dashboard>.eyebrow{margin-top:25px}
+.owner-dashboard>.book-report{margin:24px 0}
+.owner-dashboard table{width:100%;border-collapse:collapse}
+.owner-dashboard th,.owner-dashboard td{text-align:left;padding:12px;border-bottom:1px solid var(--line)}
+.owner-dashboard summary{cursor:pointer}
+.appearance-options .usage-toggle{display:flex;align-items:flex-start;gap:12px}
+.usage-toggle input{width:20px;height:20px;margin:2px 0;flex-shrink:0;accent-color:var(--accent)}

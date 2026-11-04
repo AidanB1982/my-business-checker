@@ -19,6 +19,8 @@ The calculators run locally without an account. Email/password sign-in, registra
 
 The signed-in `/account` workspace starts with expandable section tiles for sole traders, landlords, projects, bookkeeping, calculators and guides. **Colours & graphs** offers Forest, Ocean, Plum, Warm cream, Pale sky, Soft rose and Clean white app themes with independent chart palettes, saved locally on the browser under `mbc-appearance-v1`. Preferences do not sync between devices or affect calculations, invoice branding or PDF exports; no SQL migration is needed.
 
+A private [owner dashboard](docs/OWNER-DASHBOARD.md) at `/account/owner` shows registered accounts, current Advanced memberships and optional usage totals. Apply the owner-dashboard migration and assign your existing account as an owner through the SQL editor. Activity sharing is off by default and never includes financial inputs.
+
 Shared **Projects & tasks** are available at `/projects`: workspaces, boards, milestones, deliverables, discussions, weekly workload and team permissions. Owners need Advanced; invited teammates participate under that workspace plan. Apply the new project SQL migration once before use; see [project setup and features](docs/PROJECTS.md).
 
 ```sh

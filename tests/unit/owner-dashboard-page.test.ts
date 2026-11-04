@@ -1,0 +1,12 @@
+import { beforeEach,it,expect,vi } from 'vitest';
+const state=vi.hoisted(()=>({signed:true,owner:false,dbError:false,calls:[] as string[]}));
+vi.mock('server-only',()=>({}));
+vi.mock('next/navigation',()=>({notFound:()=>{throw new Error('NOT_FOUND');},redirect:()=>{throw new Error('REDIRECT');}}));
+vi.mock('@/lib/config',()=>({isSupabaseConfigured:()=>true}));
+vi.mock('@/lib/supabase/server',()=>({createClient:async()=>({auth:{getUser:async()=>({data:{user:state.signed?{id:'user'}:null},error:null})},rpc:async(name:string)=>{state.calls.push(name);return name==='is_app_owner'?{data:state.owner,error:null}:{data:state.dbError?null:{registeredUsers:4},error:state.dbError?{}:null};}})}));
+import OwnerPage from '../../src/app/account/owner/page';
+beforeEach(()=>{state.signed=true;state.owner=false;state.dbError=false;state.calls=[];});
+it('redirects signed-out visitors without requesting statistics',async()=>{state.signed=false;await expect(OwnerPage()).rejects.toThrow('REDIRECT');expect(state.calls).toEqual([]);});
+it('hides the dashboard from normal accounts before any aggregate lookup',async()=>{await expect(OwnerPage()).rejects.toThrow('NOT_FOUND');expect(state.calls).toEqual(['is_app_owner']);});
+it('requests statistics only after the verified database owner check',async()=>{state.owner=true;const page=await OwnerPage();expect(page.props.stats).toEqual({registeredUsers:4});expect(state.calls).toEqual(['is_app_owner','owner_dashboard_stats']);});
+it('does not turn database failures into misleading zero figures',async()=>{state.owner=true;state.dbError=true;const page=await OwnerPage();expect(page.props.role).toBe('alert');expect(page.props.stats).toBeUndefined();});
