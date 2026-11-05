@@ -29,7 +29,7 @@ Each tool, guide, topic, path and main public page has a unique description and 
 No Search Console account or verification token is available in this workspace, so ownership verification and sitemap submission cannot be completed here.
 
 1. Open https://search.google.com/search-console and add the public HTTPS site as a URL-prefix property, or verify your permanent domain using DNS if you have one.
-2. Choose HTML-tag verification. Put only the supplied `content` token into the Vercel production variable `GOOGLE_SITE_VERIFICATION`. Redeploy and click Verify. For a domain property, follow Google's DNS verification instead.
+2. For HTML-file verification, the supplied `google714e5e27d14b45fd.html` is committed unchanged under `public/` and must remain there permanently. After deployment, verify it at `https://my-business-checker.vercel.app/google714e5e27d14b45fd.html`. Use the root URL-prefix property `https://my-business-checker.vercel.app/`, not `/sitemap.xml/`. The sitemap is submitted after ownership verification. Alternatively, choose HTML-tag verification. Put only the supplied `content` token into the Vercel production variable `GOOGLE_SITE_VERIFICATION`. Redeploy and click Verify. For a domain property, follow Google's DNS verification instead.
 3. Submit `https://my-business-checker.vercel.app/sitemap.xml` (or your permanent origin).
 4. Inspect the homepage, a tool, a guide and a topic URL. Check Google's chosen canonical, rendered page and indexing status. Request indexing where appropriate.
 5. Review clicks, impressions, queries, indexing issues and Core Web Vitals after Google gathers data. Do not assume deployment creates immediate indexing or rankings.
