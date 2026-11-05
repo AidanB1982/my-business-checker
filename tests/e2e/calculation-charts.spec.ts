@@ -4,7 +4,7 @@ test('salary chart uses annual amounts, preserves monthly pay and clears with ed
  await page.setViewportSize({width:375,height:812});await page.goto('/tools/salary-take-home-calculator');
  await page.getByLabel('Annual salary before pension deductions (£)',{exact:true}).fill('44160');
  await page.getByLabel('Income Tax region').selectOption('scotland');await page.getByLabel('Pension deduction method').selectOption('salary-sacrifice');
- await page.getByLabel('Undergraduate student loan plan').selectOption('plan4');await page.getByLabel(/I understand this assumes standard monthly payroll/).check();
+ await page.getByText('More details: student loans',{exact:true}).click();await page.getByLabel('Undergraduate student loan plan').selectOption('plan4');await page.getByLabel(/I understand this assumes standard monthly payroll/).check();
  await page.getByRole('button',{name:'Check my salary'}).click();
  await expect(page.locator('.result h2')).toHaveText('£2,742.41');
  const chart=page.getByRole('figure',{name:'Where your annual salary goes',exact:true});await expect(chart).toBeVisible();

@@ -2,6 +2,8 @@
 
 An installable Next.js/TypeScript app for UK small-business estimates. Core tools are free; Advanced is £1.99/month with Shopify recurring billing when configured.
 
+See [workspace learning and SEO setup](docs/LEARNING-AND-SEO.md) for the learning-progress SQL migration, guided paths, worked examples, production indexing and Google Search Console verification.
+
 ## Development
 
 Advanced also includes [plain-English bookkeeping](docs/BOOKKEEPING.md) at `/bookkeeping`, with guided setup, profit and loss, balance sheets, monthly health checks, branded customer invoices, manual bank reconciliation, construction projects and equipment depreciation, accountant ZIP packs and portable backups. Apply the bookkeeping migrations in the documented order before use. See the [accounting review pack](docs/ACCOUNTING-REVIEW.md) and [restore runbook](docs/BOOKKEEPING-RECOVERY.md); independent sign-off and hosted recovery rehearsal remain pending. It is an accrual bookkeeping workspace, not a VAT/tax-filing package.

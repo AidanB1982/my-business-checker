@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import { toolJourneys } from '@/content/tool-journeys';
+export function ResultNextStep({slug}:{slug:string}){const step=toolJourneys[slug];if(!step)return null;return <section className="result-next-step"><p className="eyebrow">Understand · Apply</p><h2>Your next useful step</h2><p>{step.reason}</p><div className="actions"><Link className="button secondary" href={`/learn/${step.lesson}`}>Understand this result →</Link><Link className="text-link" href={step.next}>Put it into practice →</Link></div><p className="fine">Your figures are not copied into another tool or record automatically. Check the assumptions and supporting evidence first.</p></section>;}

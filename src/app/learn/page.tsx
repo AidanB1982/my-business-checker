@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import { LearningHub } from '@/components/learning-hub';
+import { pageMetadata } from '@/lib/seo';
+export const metadata=pageMetadata('Learn bookkeeping, landlord records and personal finance','Short UK learning paths with worked examples, free knowledge checks and practical calculators for sole traders, landlords and personal finances.','/learn');
+export default function Learn(){return <div className="wrap section"><p className="eyebrow">Learn · Try · Understand</p><h1>Build confidence, one useful step at a time.</h1><p className="lead">Choose a learning path. Read a short explanation, try a worked example and check your understanding. Introductory lessons and checks are public; Advanced includes deeper lessons and saves your progress.</p><p><Link className="text-link" href="/guides">Looking for a quick answer? Browse the guides and topics →</Link></p><LearningHub/><p className="fine">Educational drafts. Independent technical review is pending. Sources and limitations accompany each lesson; these paths do not award a professional qualification.</p></div>;}

@@ -1,2 +1,3 @@
-export const metadata={title:"Disclaimer"};
+import { pageMetadata } from '@/lib/seo';
+export const metadata=pageMetadata('Calculator and guidance limitations','Understand the educational scope and limitations of UK business, property, salary and pension estimates.','/disclaimer');
 export default function Page(){return <article className="wrap narrow section"><p className="eyebrow">My Business Checker</p><h1>Understand the limits.</h1><p>Tools and guides provide general information and estimates. They are not personalised tax, accounting, legal or financial advice.</p><p>Your circumstances, eligibility, reliefs, residence and other income can change the answer. Always check current official guidance and seek professional advice where appropriate.</p><p>This is a development preview. Do not use draft calculations to prepare a tax return or make filing decisions.</p></article>;}

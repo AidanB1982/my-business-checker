@@ -1,0 +1,17 @@
+import { it,expect,vi,afterEach } from 'vitest';
+vi.mock('server-only',()=>({}));
+vi.mock('@/lib/config',()=>({SITE_URL:'https://my-business-checker.vercel.app'}));
+import { learningLessons } from '@/content/learning';
+import { learningPaths,knowledgeChecks } from '@/content/learning-paths';
+import { topics } from '@/content/topics';
+import { tools } from '@/content/tools';
+import { guides } from '@/content/guides';
+import { toolJourneys,toolExamples } from '@/content/tool-journeys';
+import robots from '../../src/app/robots';
+import sitemap from '../../src/app/sitemap';
+import { pageMetadata,structuredJson } from '@/lib/seo';
+afterEach(()=>vi.unstubAllEnvs());
+it('every path, topic and tool journey links to real content',()=>{for(const p of learningPaths)for(const slug of p.lessons)expect(learningLessons.some(l=>l.slug===slug)).toBe(true);for(const t of topics){for(const slug of t.guides)expect(guides.some(g=>g.slug===slug)).toBe(true);for(const slug of t.tools)expect(tools.some(t=>t.slug===slug)).toBe(true);expect(learningPaths.some(p=>p.slug===t.path)).toBe(true);}for(const t of tools){expect(toolExamples[t.slug]).toBeDefined();expect(learningLessons.some(l=>l.slug===toolJourneys[t.slug].lesson)).toBe(true);}for(const l of learningLessons){const q=knowledgeChecks[l.slug];expect(q).toBeDefined();expect(q.correct).toBeLessThan(q.options.length);expect(q.options[q.correct]).toBeTruthy();}});
+it('permits production public indexing while keeping private routes excluded',()=>{vi.stubEnv('NODE_ENV','production');vi.stubEnv('VERCEL_ENV','production');const r=robots();expect(r.rules).toMatchObject({allow:'/',disallow:expect.arrayContaining(['/account','/api/','/bookkeeping','/projects'])});expect(r.sitemap).toContain('/sitemap.xml');vi.stubEnv('VERCEL_ENV','preview');expect(robots().rules).toEqual({userAgent:'*',disallow:'/'});vi.stubEnv('VERCEL_ENV','production');vi.stubEnv('NODE_ENV','development');expect(robots().rules).toEqual({userAgent:'*',disallow:'/'});});
+it('sitemap includes learning and topics but never account or record routes',()=>{const paths=sitemap().map(r=>new URL(r.url).pathname);expect(new Set(paths).size).toBe(paths.length);expect(paths).toContain('/learn/paths/sole-trader-foundations');expect(paths).toContain('/topics/landlord-records-and-planning');expect(paths.some(p=>/^\/(account|api|auth|projects|bookkeeping)(\/|$)/.test(p))).toBe(false);});
+it('uses a page-specific canonical and safely escapes structured data',()=>{expect(pageMetadata('Title','Description','/guides/self-employed-tax').alternates?.canonical).toBe('https://my-business-checker.vercel.app/guides/self-employed-tax');const json=structuredJson({title:'</script><script>alert(1)</script>'});expect(json).not.toContain('<');expect(JSON.parse(json).title).toBe('</script><script>alert(1)</script>');});

@@ -1,0 +1,2 @@
+export const contentUpdated='2026-11-05';
+export function EditorialStatus(){return <aside className="editorial-status"><p><strong>Publisher:</strong> My Business Checker · <strong>Content updated:</strong> <time dateTime={contentUpdated}>5 November 2026</time></p><p><strong>Technical review:</strong> pending. No independent reviewer or completed review date is recorded.</p><p className="fine">A content update does not mean tax rules have been independently verified. Check the linked sources, selected tax year and calculation assumptions.</p></aside>;}

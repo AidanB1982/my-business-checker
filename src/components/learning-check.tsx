@@ -1,0 +1,8 @@
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import type { KnowledgeCheck } from '@/content/learning-paths';
+export function LearningCheck({slug,quiz,advanced}:{slug:string;quiz:KnowledgeCheck;advanced:boolean}) {
+ const [answer,setAnswer]=useState<number|null>(null),[feedback,setFeedback]=useState(''),[busy,setBusy]=useState(false);
+ return <section className="learning-check"><h2>Check your understanding</h2><form onSubmit={async e=>{e.preventDefault();if(answer===null)return;const passed=answer===quiz.correct;setFeedback(`${passed?'Correct.':'Have another look.'} ${quiz.explanation}`);if(advanced&&passed){setBusy(true);try{const r=await fetch('/api/learning',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson:slug,answer,version:quiz.version})});const body=await r.json();setFeedback(r.ok&&body.passed?`Correct. ${quiz.explanation} Progress saved to your account.`:`${quiz.explanation} ${body.error??'Progress could not be saved. Please try again.'}`);}catch{setFeedback(`${quiz.explanation} Progress could not be saved. Please try again.`);}finally{setBusy(false);}}}}><fieldset><legend>{quiz.question}</legend>{quiz.options.map((option,index)=><label key={option}><input type="radio" name={`check-${slug}`} checked={answer===index} onChange={()=>{setAnswer(index);setFeedback('');}}/>{option}</label>)}</fieldset><button className="button" disabled={answer===null||busy}>{busy?'Saving…':advanced?'Check answer & save progress':'Check answer'}</button></form>{feedback&&<p role="status">{feedback}</p>}{!advanced&&<p className="fine">Knowledge checks are free to try. <Link className="text-link" href="/pricing">Advanced saves your progress across devices →</Link></p>}</section>;
+}

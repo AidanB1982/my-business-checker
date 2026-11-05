@@ -1,0 +1,12 @@
+import { EditorialStatus } from '@/components/editorial-status';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { topics } from '@/content/topics';
+import { tools } from '@/content/tools';
+import { guides } from '@/content/guides';
+import { pageMetadata } from '@/lib/seo';
+import { StructuredData } from '@/components/structured-data';
+import { SITE_URL } from '@/lib/config';
+export function generateStaticParams(){return topics.map(t=>({slug:t.slug}));}
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const t=topics.find(t=>t.slug===slug);return t?pageMetadata(t.title,t.description,`/topics/${slug}`):{title:'Topic not found'};}
+export default async function Topic({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const t=topics.find(t=>t.slug===slug);if(!t)notFound();return <article className="wrap section"><Link className="text-link" href="/guides">← Guides and topics</Link><p className="eyebrow">Understand the question</p><h1>{t.title}</h1><p className="lead">{t.description}</p><div className="narrow">{t.paragraphs.map(p=><p key={p}>{p}</p>)}</div><div className="actions"><Link className="button" href={`/learn/paths/${t.path}`}>Follow the learning path →</Link><Link className="text-link" href={slug==='small-business-project-planning'?'/projects':'/tools'}>Open your working areas →</Link></div><h2>Try the relevant tools</h2><div className="guide-grid">{t.tools.map(slug=>{const tool=tools.find(t=>t.slug===slug)!;return <Link className="guide-card" key={slug} href={`/tools/${slug}`}><h3>{tool.name}</h3><p>{tool.description}</p><span className="text-link">Try the tool →</span></Link>;})}</div><h2>Build your understanding</h2><div className="guide-grid">{t.guides.map(slug=>{const g=guides.find(g=>g.slug===slug)!;return <Link className="guide-card" href={`/guides/${slug}`} key={slug}><h3>{g.title}</h3><p>{g.summary}</p></Link>;})}</div><section className="topic-faq"><h2>Common questions</h2>{t.faq.map(([q,a])=><details key={q}><summary>{q}</summary><p>{a}</p></details>)}</section><EditorialStatus/><StructuredData data={{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE_URL},{'@type':'ListItem',position:2,name:'Guides',item:new URL('/guides',SITE_URL).toString()},{'@type':'ListItem',position:3,name:t.title,item:new URL(`/topics/${slug}`,SITE_URL).toString()}]}}/></article>;}
